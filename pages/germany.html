@@ -308,6 +308,7 @@
                        onkeydown="if(event.key==='Enter')saveKey()">
                 <button class="g-btn-primary" onclick="saveKey()">Save</button>
             </div>
+            <div id="key-test-msg" style="font-size:.75rem;margin-top:.5rem;min-height:1.2em;"></div>
             <p class="key-note">
                 Stored in your browser only — never sent anywhere except Google's API.
                 Free key at <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>.
@@ -413,8 +414,10 @@ const TYPE_DESC = {
 };
 
 const TOTAL = 20;
-const GEMINI = key =>
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+// Model list — tries each in order if one fails
+const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'];
+const GEMINI = (key, model) =>
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let apiKey = '', theta = 3.0, qNum = 0, answers = [],
@@ -432,9 +435,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Key management ────────────────────────────────────────────────────────────
-function saveKey() {
+async function saveKey() {
     const v = document.getElementById('key-input').value.trim();
     if (!v) return;
+    const msg = document.getElementById('key-test-msg');
+    msg.style.color = '#7a756d';
+    msg.textContent = 'Testing key…';
+    // Quick test call
+    let ok = false, errText = '';
+    for (const model of MODELS) {
+        try {
+            const res = await fetch(GEMINI(v, model), {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ contents:[{parts:[{text:'Reply with the single word: ok'}]}] })
+            });
+            if (res.ok) { ok=true; break; }
+            const b = await res.json().catch(()=>({}));
+            errText = b?.error?.message || `HTTP ${res.status}`;
+        } catch(e) { errText = e.message; }
+    }
+    if (!ok) {
+        msg.style.color = '#ef4444';
+        msg.textContent = 'Key test failed: ' + errText;
+        return;
+    }
     apiKey = v;
     localStorage.setItem('gemini_key', v);
     document.getElementById('key-saved-ui').style.display = 'block';
@@ -550,29 +574,41 @@ Rules:
 - All options roughly the same length
 - The question must genuinely discriminate ${lvl} knowledge`;
 
-    for (let a=0; a<retries; a++) {
-        try {
-            const res = await fetch(GEMINI(apiKey), {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({
-                    contents:[{parts:[{text:prompt}]}],
-                    generationConfig:{ temperature:0.95, responseMimeType:'application/json' }
-                })
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!text) throw new Error('empty');
-            const q = JSON.parse(text);
-            if (!q.question || !Array.isArray(q.options) || q.options.length!==4
-                || typeof q.correctIndex!=='number' || !q.explanation) throw new Error('invalid');
-            q.li=li; q.lvl=lvl; q.type=type;
-            return q;
-        } catch(e) {
-            console.warn(`Attempt ${a+1}:`, e);
-            if (a===retries-1) throw e;
-            await new Promise(r=>setTimeout(r, 800));
+    for (let modelIdx=0; modelIdx<MODELS.length; modelIdx++) {
+        const model = MODELS[modelIdx];
+        for (let a=0; a<retries; a++) {
+            try {
+                const res = await fetch(GEMINI(apiKey, model), {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        contents:[{parts:[{text:prompt}]}],
+                        generationConfig:{ temperature:0.95 }
+                    })
+                });
+                if (!res.ok) {
+                    const errBody = await res.json().catch(()=>({}));
+                    const msg = errBody?.error?.message || `HTTP ${res.status}`;
+                    throw new Error(msg);
+                }
+                const data = await res.json();
+                const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!rawText) throw new Error('Empty response from API');
+                // Strip markdown code fences if present
+                const text = rawText.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+                const q = JSON.parse(text);
+                if (!q.question || !Array.isArray(q.options) || q.options.length!==4
+                    || typeof q.correctIndex!=='number' || !q.explanation) throw new Error('Invalid question structure');
+                q.li=li; q.lvl=lvl; q.type=type;
+                return q;
+            } catch(e) {
+                console.warn(`Model ${model} attempt ${a+1}:`, e.message);
+                if (a===retries-1) {
+                    if (modelIdx===MODELS.length-1) throw e; // all models exhausted
+                    break; // try next model
+                }
+                await new Promise(r=>setTimeout(r, 800));
+            }
         }
     }
 }
@@ -602,9 +638,12 @@ async function loadNext() {
         covered.push(curQ.topic);
         displayQ(curQ);
     } catch(e) {
+        const errMsg = e.message || 'Unknown error';
         document.getElementById('q-area').innerHTML =
             `<div class="loading-card"><div class="loading-msg" style="color:#ef4444">
-            Failed to generate question — check your API key or internet connection.<br>
+            <strong>Error:</strong> ${errMsg}<br>
+            <span style="font-size:.75rem;color:#666;display:block;margin-top:.4rem">
+            Check: key is correct · Generative Language API is enabled in Google Cloud · no usage limits hit</span>
             <button onclick="loadNext()" style="margin-top:.9rem;background:none;border:1px solid #444;
             color:#aaa;padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-family:var(--font-family);">
             Retry</button></div></div>`;
