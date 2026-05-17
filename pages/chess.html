@@ -362,10 +362,6 @@
     </div>
 </div>
 
-<footer>
-    <p>&copy; 2026 Kaden Schmidt. All rights reserved.</p>
-</footer>
-
 <!-- chess.js only — no chessboard.js, we render ourselves -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
@@ -805,388 +801,258 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
 <style>
 .stats-divider { width:100%; height:1px; background:var(--card-border); margin-top:2.5rem; }
-
 .chess-stats-page {
     max-width:900px; margin:0 auto;
     padding:2.5rem 2rem 4rem;
 }
-
 .chess-stats-page h2 {
     font-size:1.6rem; font-weight:600; letter-spacing:-.03em;
     background:linear-gradient(180deg,#fff 0%,#a0a0a0 100%);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     margin-bottom:1.8rem;
 }
-
 .chess-stats-page h3 {
     font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
     color:var(--text-secondary); margin-bottom:1rem;
 }
-
-/* Rating cards row */
-.rating-cards {
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-    gap:1rem; margin-bottom:1.8rem;
-}
-
-.rating-card {
+.rapid-card {
     background:var(--card-bg); border:1px solid var(--card-border);
-    border-radius:12px; padding:1.1rem 1.3rem;
+    border-radius:12px; padding:1.2rem 1.5rem;
+    display:flex; gap:2.5rem; flex-wrap:wrap;
+    margin-bottom:1.4rem; align-items:center;
 }
-
-.rating-card .rc-label {
-    font-size:.72rem; text-transform:uppercase; letter-spacing:.07em;
-    color:var(--text-secondary); margin-bottom:.4rem;
-}
-
-.rating-card .rc-value {
-    font-size:1.7rem; font-weight:600; color:var(--text-primary);
-    letter-spacing:-.03em; line-height:1;
-}
-
-.rating-card .rc-record {
-    font-size:.72rem; color:var(--text-secondary); margin-top:.35rem;
-}
-
-.rc-best { font-size:.72rem; color:#a0a0a0; margin-top:.2rem; }
-
-/* Stat panels */
+.rapid-card .rc-block {}
+.rapid-card .rc-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); margin-bottom:.3rem; }
+.rapid-card .rc-value { font-size:2rem; font-weight:600; color:var(--text-primary); letter-spacing:-.03em; line-height:1; }
+.rapid-card .rc-sub   { font-size:.75rem; color:var(--text-secondary); margin-top:.25rem; }
 .stats-panel {
     background:var(--card-bg); border:1px solid var(--card-border);
     border-radius:12px; padding:1.4rem 1.5rem; margin-bottom:1.2rem;
 }
-
-/* Chart */
-.chart-wrap { position:relative; height:220px; }
-
-/* Openings table */
-.openings-table { width:100%; border-collapse:collapse; font-size:.82rem; }
-.openings-table th {
-    text-align:left; color:var(--text-secondary); font-weight:500;
-    padding:.4rem .6rem; border-bottom:1px solid var(--card-border);
-    font-size:.72rem; text-transform:uppercase; letter-spacing:.06em;
+.chart-wrap { position:relative; height:240px; }
+.openings-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; }
+.op-list h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); margin-bottom:.9rem; }
+.op-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.45rem 0; border-bottom:1px solid rgba(255,255,255,.04);
+    font-size:.82rem; gap:.8rem;
 }
-.openings-table td { padding:.55rem .6rem; color:var(--text-secondary); }
-.openings-table tr:not(:last-child) td { border-bottom:1px solid rgba(255,255,255,.04); }
-.openings-table .op-name { color:var(--text-primary); font-weight:500; max-width:220px; }
-
-/* Win rate bar */
-.wr-bar-wrap { display:flex; align-items:center; gap:.5rem; min-width:120px; }
-.wr-bar { height:6px; border-radius:3px; background:var(--card-border); flex:1; overflow:hidden; }
-.wr-bar-fill { height:100%; border-radius:3px; background:#4ade80; }
-.wr-pct { font-size:.75rem; color:var(--text-primary); min-width:34px; text-align:right; }
-
-/* Time control breakdown */
-.tc-grid {
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem;
-}
-.tc-card {
-    background:rgba(255,255,255,.03); border:1px solid var(--card-border);
-    border-radius:10px; padding:1rem 1.1rem;
-}
-.tc-card .tc-label { font-size:.78rem; color:var(--text-secondary); margin-bottom:.6rem; font-weight:500; }
-.tc-row { display:flex; justify-content:space-between; font-size:.78rem; margin-bottom:.25rem; }
-.tc-row .tc-key { color:var(--text-secondary); }
-.tc-row .tc-val { font-weight:600; }
-.tc-row .tc-val.win  { color:#4ade80; }
-.tc-row .tc-val.loss { color:#ef4444; }
-.tc-row .tc-val.draw { color:#facc15; }
-
-/* Loading spinner */
-.stats-loading {
-    display:flex; align-items:center; justify-content:center;
-    padding:3rem; color:var(--text-secondary); font-size:.88rem; gap:.6rem;
-}
-.spin {
-    width:16px; height:16px; border:2px solid var(--card-border);
-    border-top-color:#a0a0a0; border-radius:50%;
-    animation:spin .7s linear infinite;
-}
+.op-row:last-child { border-bottom:none; }
+.op-name { color:var(--text-primary); font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.op-games { color:var(--text-secondary); font-size:.72rem; flex-shrink:0; }
+.op-pct { font-weight:600; flex-shrink:0; min-width:38px; text-align:right; }
+.op-pct.good { color:#4ade80; }
+.op-pct.bad  { color:#ef4444; }
+.stats-loading { display:flex; align-items:center; justify-content:center; padding:2.5rem; color:var(--text-secondary); font-size:.85rem; gap:.6rem; }
+.spin { width:14px; height:14px; border:2px solid var(--card-border); border-top-color:#888; border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 
 <div class="stats-divider"></div>
 <div class="chess-stats-page">
-    <h2>My Chess Stats</h2>
+    <h2>My Rapid Chess Stats</h2>
 
-    <!-- Rating cards -->
-    <div class="rating-cards" id="sc-rating-cards">
-        <div class="stats-loading"><div class="spin"></div> Loading stats…</div>
+    <div id="sc-rapid-card">
+        <div class="stats-loading"><div class="spin"></div> Loading…</div>
     </div>
 
-    <!-- Rating over time -->
     <div class="stats-panel">
-        <h3>Rapid Rating Over Time</h3>
+        <h3>Rapid Rating — Past 12 Months</h3>
         <div id="sc-chart-wrap" class="chart-wrap">
             <div class="stats-loading"><div class="spin"></div> Fetching games…</div>
         </div>
     </div>
 
-    <!-- Openings -->
     <div class="stats-panel">
-        <h3>Top Openings — Win Rate (Rapid, last 3 months)</h3>
+        <h3>Opening Performance (Rapid, min. 3 games)</h3>
         <div id="sc-openings">
-            <div class="stats-loading"><div class="spin"></div></div>
-        </div>
-    </div>
-
-    <!-- Time control breakdown -->
-    <div class="stats-panel">
-        <h3>Results by Time Control (last 3 months)</h3>
-        <div id="sc-tc">
             <div class="stats-loading"><div class="spin"></div></div>
         </div>
     </div>
 </div>
 
+<footer>
+    <p>&copy; 2026 Kaden Schmidt. All rights reserved.</p>
+</footer>
+
 <script>
-// ── Chess Stats — independent of bot above ────────────────────────────────────
 (async function chessStats() {
     const USER = 'kaden45';
     const API  = `https://api.chess.com/pub/player/${USER}`;
 
-    // ── helpers ────────────────────────────────────────────────────────────────
     function safeGet(url) {
         return fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
     }
-
     function pgnHeader(pgn, key) {
         const m = pgn.match(new RegExp(`\\[${key} "([^"]+)"\\]`));
         return m ? m[1] : null;
     }
-
     function resultFor(game, user) {
         const u = user.toLowerCase();
         const isWhite = game.white?.username?.toLowerCase() === u;
-        const side    = isWhite ? game.white : game.black;
-        const res     = side?.result;
+        const side = isWhite ? game.white : game.black;
+        const res  = side?.result;
         if (!res) return null;
-        if (res === 'win')                              return 'win';
+        if (res === 'win') return 'win';
         if (['checkmated','resigned','timeout','abandoned','lose'].includes(res)) return 'loss';
         return 'draw';
     }
 
-    // ── 1. Current ratings ─────────────────────────────────────────────────────
-    async function loadRatingCards() {
+    // ── Current rapid stats ──────────────────────────────────────────────────
+    async function loadRapidCard() {
         const data = await safeGet(`${API}/stats`);
-        if (!data) { document.getElementById('sc-rating-cards').innerHTML = '<p style="color:#666;font-size:.85rem">Could not load stats.</p>'; return; }
-
-        const types = [
-            { key: 'chess_rapid',  label: 'Rapid'  },
-            { key: 'chess_blitz',  label: 'Blitz'  },
-            { key: 'chess_bullet', label: 'Bullet' },
-            { key: 'chess_daily',  label: 'Daily'  },
-        ];
-
-        let html = '';
-        for (const { key, label } of types) {
-            const t = data[key];
-            if (!t) continue;
-            const rating = t.last?.rating ?? '—';
-            const best   = t.best?.rating ?? '—';
-            const w = t.record?.win  ?? 0;
-            const l = t.record?.loss ?? 0;
-            const d = t.record?.draw ?? 0;
-            html += `
-            <div class="rating-card">
-                <div class="rc-label">${label}</div>
+        const el   = document.getElementById('sc-rapid-card');
+        if (!data?.chess_rapid) { el.innerHTML = '<p style="color:#666;font-size:.85rem">Could not load stats.</p>'; return; }
+        const r = data.chess_rapid;
+        const rating = r.last?.rating ?? '—';
+        const best   = r.best?.rating  ?? '—';
+        const w = r.record?.win  ?? 0;
+        const l = r.record?.loss ?? 0;
+        const d = r.record?.draw ?? 0;
+        const total  = w + l + d;
+        const wr     = total ? Math.round(w / total * 100) : 0;
+        el.innerHTML = `
+        <div class="rapid-card">
+            <div class="rc-block">
+                <div class="rc-label">Current Rating</div>
                 <div class="rc-value">${rating}</div>
-                <div class="rc-best">Best: ${best}</div>
-                <div class="rc-record">${w}W · ${l}L · ${d}D</div>
-            </div>`;
-        }
-        document.getElementById('sc-rating-cards').innerHTML = html || '<p style="color:#666">No data.</p>';
+            </div>
+            <div class="rc-block">
+                <div class="rc-label">Best Rating</div>
+                <div class="rc-value">${best}</div>
+            </div>
+            <div class="rc-block">
+                <div class="rc-label">Record</div>
+                <div class="rc-value" style="font-size:1.3rem">
+                    <span style="color:#4ade80">${w}W</span> &nbsp;
+                    <span style="color:#ef4444">${l}L</span> &nbsp;
+                    <span style="color:#facc15">${d}D</span>
+                </div>
+                <div class="rc-sub">${total} games · ${wr}% win rate</div>
+            </div>
+        </div>`;
     }
 
-    // ── 2. Fetch recent game archives (last N months) ──────────────────────────
-    async function fetchRecentGames(months = 3) {
+    // ── Fetch last 12 months of rapid games ──────────────────────────────────
+    async function fetchRapidGames() {
         const archData = await safeGet(`${API}/games/archives`);
         if (!archData?.archives?.length) return [];
-
-        const urls  = archData.archives.slice(-months);
-        const all   = [];
+        const urls = archData.archives.slice(-12);
+        const all  = [];
         for (const url of urls) {
             const d = await safeGet(url);
-            if (d?.games) all.push(...d.games);
+            if (d?.games) all.push(...d.games.filter(g => g.time_class === 'rapid'));
         }
         return all;
     }
 
-    // ── 3. Rating over time chart ──────────────────────────────────────────────
-    async function loadRatingChart(games) {
+    // ── Rating over time ─────────────────────────────────────────────────────
+    function loadRatingChart(games) {
         const wrap = document.getElementById('sc-chart-wrap');
-
-        const rapid = games
-            .filter(g => g.time_class === 'rapid')
-            .sort((a, b) => a.end_time - b.end_time);
-
-        if (!rapid.length) {
-            wrap.innerHTML = '<p style="color:#666;font-size:.85rem;padding:1rem">No rapid games found in this period.</p>';
+        const sorted = [...games].sort((a,b) => a.end_time - b.end_time);
+        if (!sorted.length) {
+            wrap.innerHTML = '<p style="color:#666;font-size:.85rem;padding:1rem">No rapid games found.</p>';
             return;
         }
-
-        const labels = [];
+        const labels  = [];
         const ratings = [];
-
-        for (const g of rapid) {
+        for (const g of sorted) {
             const isWhite = g.white?.username?.toLowerCase() === USER;
             const r = isWhite ? g.white?.rating : g.black?.rating;
             if (!r) continue;
             const d = new Date(g.end_time * 1000);
-            labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            labels.push(d.toLocaleDateString('en-US', { month:'short', day:'numeric' }));
             ratings.push(r);
         }
-
-        wrap.innerHTML = '<canvas id="sc-rating-canvas"></canvas>';
-
-        new Chart(document.getElementById('sc-rating-canvas'), {
+        wrap.innerHTML = '<canvas id="sc-canvas"></canvas>';
+        new Chart(document.getElementById('sc-canvas'), {
             type: 'line',
             data: {
                 labels,
-                datasets: [{
+                datasets:[{
                     data: ratings,
                     borderColor: '#f0ece6',
-                    backgroundColor: 'rgba(240,236,230,.07)',
+                    backgroundColor: 'rgba(240,236,230,.06)',
                     borderWidth: 2,
-                    pointRadius: ratings.length < 60 ? 3 : 0,
+                    pointRadius: ratings.length < 80 ? 2 : 0,
                     pointHoverRadius: 5,
                     tension: 0.3,
                     fill: true,
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1a1a1a',
-                        borderColor: '#2e2b26',
-                        borderWidth: 1,
-                        titleColor: '#f0ece6',
-                        bodyColor: '#a0a0a0',
-                        callbacks: {
-                            label: ctx => ` Rating: ${ctx.parsed.y}`
-                        }
+                responsive:true, maintainAspectRatio:false,
+                plugins:{
+                    legend:{ display:false },
+                    tooltip:{
+                        backgroundColor:'#1a1a1a', borderColor:'#2e2b26', borderWidth:1,
+                        titleColor:'#f0ece6', bodyColor:'#a0a0a0',
+                        callbacks:{ label: ctx => ` Rating: ${ctx.parsed.y}` }
                     }
                 },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: '#666',
-                            font: { size: 10 },
-                            maxTicksLimit: 8,
-                            maxRotation: 0,
-                        },
-                        grid: { color: 'rgba(255,255,255,.04)' }
-                    },
-                    y: {
-                        ticks: { color: '#666', font: { size: 10 } },
-                        grid: { color: 'rgba(255,255,255,.04)' }
-                    }
+                scales:{
+                    x:{ ticks:{ color:'#555', font:{size:10}, maxTicksLimit:10, maxRotation:0 }, grid:{ color:'rgba(255,255,255,.04)' } },
+                    y:{ ticks:{ color:'#555', font:{size:10} }, grid:{ color:'rgba(255,255,255,.04)' } }
                 }
             }
         });
     }
 
-    // ── 4. Opening win rates ───────────────────────────────────────────────────
-    async function loadOpenings(games) {
-        const el = document.getElementById('sc-openings');
-
-        const rapid = games.filter(g => g.time_class === 'rapid' && g.pgn);
-        const map   = {};
-
-        for (const g of rapid) {
-            const opening = pgnHeader(g.pgn, 'Opening') || pgnHeader(g.pgn, 'ECOUrl')?.split('/').pop()?.replace(/-/g,' ') || 'Unknown';
+    // ── Opening best/worst ───────────────────────────────────────────────────
+    function loadOpenings(games) {
+        const el  = document.getElementById('sc-openings');
+        const map = {};
+        for (const g of games) {
+            if (!g.pgn) continue;
+            const opening = pgnHeader(g.pgn, 'Opening') || 'Unknown';
             const result  = resultFor(g, USER);
             if (!result) continue;
             if (!map[opening]) map[opening] = { win:0, loss:0, draw:0 };
             map[opening][result]++;
         }
-
         const rows = Object.entries(map)
             .map(([name, r]) => {
                 const total = r.win + r.loss + r.draw;
                 const wr    = total ? Math.round(r.win / total * 100) : 0;
-                return { name, total, wr, ...r };
+                return { name, total, wr };
             })
-            .filter(r => r.total >= 3)
-            .sort((a, b) => b.total - a.total)
-            .slice(0, 10);
+            .filter(r => r.total >= 3);
 
         if (!rows.length) {
-            el.innerHTML = '<p style="color:#666;font-size:.85rem">Not enough games to calculate opening stats.</p>';
+            el.innerHTML = '<p style="color:#666;font-size:.85rem">Not enough games to show opening stats.</p>';
             return;
         }
 
-        let html = `<table class="openings-table">
-            <thead><tr>
-                <th>Opening</th><th>Games</th><th>W / L / D</th><th>Win Rate</th>
-            </tr></thead><tbody>`;
+        const best  = [...rows].sort((a,b) => b.wr - a.wr).slice(0, 5);
+        const worst = [...rows].sort((a,b) => a.wr - b.wr).slice(0, 5);
 
-        for (const r of rows) {
-            html += `<tr>
-                <td class="op-name">${r.name}</td>
-                <td>${r.total}</td>
-                <td><span style="color:#4ade80">${r.win}</span> / <span style="color:#ef4444">${r.loss}</span> / <span style="color:#facc15">${r.draw}</span></td>
-                <td>
-                    <div class="wr-bar-wrap">
-                        <div class="wr-bar"><div class="wr-bar-fill" style="width:${r.wr}%"></div></div>
-                        <span class="wr-pct">${r.wr}%</span>
-                    </div>
-                </td>
-            </tr>`;
+        function opRows(list, cls) {
+            return list.map(r => `
+                <div class="op-row">
+                    <span class="op-name" title="${r.name}">${r.name}</span>
+                    <span class="op-games">${r.total}g</span>
+                    <span class="op-pct ${cls}">${r.wr}%</span>
+                </div>`).join('');
         }
-        html += '</tbody></table>';
-        el.innerHTML = html;
+
+        el.innerHTML = `
+        <div class="openings-grid">
+            <div class="op-list">
+                <h4>🏆 Best Openings</h4>
+                ${opRows(best, 'good')}
+            </div>
+            <div class="op-list">
+                <h4>⚠ Worst Openings</h4>
+                ${opRows(worst, 'bad')}
+            </div>
+        </div>`;
     }
 
-    // ── 5. Time control breakdown ──────────────────────────────────────────────
-    async function loadTimeControls(games) {
-        const el = document.getElementById('sc-tc');
-        const types = ['rapid','blitz','bullet','daily'];
-        const map   = {};
-
-        for (const g of games) {
-            const tc  = g.time_class;
-            if (!types.includes(tc)) continue;
-            const res = resultFor(g, USER);
-            if (!res) continue;
-            if (!map[tc]) map[tc] = { win:0, loss:0, draw:0 };
-            map[tc][res]++;
-        }
-
-        if (!Object.keys(map).length) {
-            el.innerHTML = '<p style="color:#666;font-size:.85rem">No games found.</p>';
-            return;
-        }
-
-        let html = '<div class="tc-grid">';
-        for (const tc of types) {
-            const r = map[tc];
-            if (!r) continue;
-            const total = r.win + r.loss + r.draw;
-            const wr    = total ? Math.round(r.win / total * 100) : 0;
-            html += `<div class="tc-card">
-                <div class="tc-label">${tc.charAt(0).toUpperCase()+tc.slice(1)} <span style="color:#555;font-weight:300">(${total} games)</span></div>
-                <div class="tc-row"><span class="tc-key">Wins</span>  <span class="tc-val win">${r.win}</span></div>
-                <div class="tc-row"><span class="tc-key">Losses</span><span class="tc-val loss">${r.loss}</span></div>
-                <div class="tc-row"><span class="tc-key">Draws</span> <span class="tc-val draw">${r.draw}</span></div>
-                <div class="tc-row"><span class="tc-key">Win %</span> <span class="tc-val">${wr}%</span></div>
-            </div>`;
-        }
-        html += '</div>';
-        el.innerHTML = html;
-    }
-
-    // ── Run all ────────────────────────────────────────────────────────────────
-    loadRatingCards();
-    const games = await fetchRecentGames(3);
-    await Promise.all([
-        loadRatingChart(games),
-        loadOpenings(games),
-        loadTimeControls(games),
-    ]);
+    // ── Run ──────────────────────────────────────────────────────────────────
+    loadRapidCard();
+    const games = await fetchRapidGames();
+    loadRatingChart(games);
+    loadOpenings(games);
 
 })();
 </script>
