@@ -414,10 +414,33 @@ const TYPE_DESC = {
 };
 
 const TOTAL = 20;
-// Model list — tries each in order if one fails
-const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'];
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+// Dynamically discover the best available model for this API key
+async function pickModel(key) {
+    const cached = sessionStorage.getItem('gemini_model');
+    if (cached) return cached;
+    const res = await fetch(`${GEMINI_BASE}/models?key=${key}`);
+    if (!res.ok) {
+        const b = await res.json().catch(()=>({}));
+        throw new Error(b?.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const all = (data.models || [])
+        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+        .map(m => m.name.replace('models/', ''));
+    // Prefer flash/fast models; avoid vision-only or embedding models
+    const order = ['flash','pro','gemini'];
+    for (const keyword of order) {
+        const match = all.find(m => m.toLowerCase().includes(keyword) && !m.includes('embed'));
+        if (match) { sessionStorage.setItem('gemini_model', match); return match; }
+    }
+    if (all.length) { sessionStorage.setItem('gemini_model', all[0]); return all[0]; }
+    throw new Error('No generateContent-capable models found on this key');
+}
+
 const GEMINI = (key, model) =>
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    `${GEMINI_BASE}/models/${model}:generateContent?key=${key}`;
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let apiKey = '', theta = 3.0, qNum = 0, answers = [],
@@ -441,29 +464,22 @@ async function saveKey() {
     const msg = document.getElementById('key-test-msg');
     msg.style.color = '#7a756d';
     msg.textContent = 'Testing key…';
-    // Quick test call
-    let ok = false, errText = '';
-    for (const model of MODELS) {
-        try {
-            const res = await fetch(GEMINI(v, model), {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ contents:[{parts:[{text:'Reply with the single word: ok'}]}] })
-            });
-            if (res.ok) { ok=true; break; }
-            const b = await res.json().catch(()=>({}));
-            errText = b?.error?.message || `HTTP ${res.status}`;
-        } catch(e) { errText = e.message; }
-    }
-    if (!ok) {
+    try {
+        sessionStorage.removeItem('gemini_model'); // clear cache so pickModel re-runs
+        const model = await pickModel(v);
+        msg.style.color = '#4ade80';
+        msg.textContent = `✓ Connected — using ${model}`;
+        apiKey = v;
+        localStorage.setItem('gemini_key', v);
+        setTimeout(() => {
+            document.getElementById('key-saved-ui').style.display = 'block';
+            document.getElementById('key-input-ui').style.display = 'none';
+            document.getElementById('start-btn').disabled = false;
+        }, 800);
+    } catch(e) {
         msg.style.color = '#ef4444';
-        msg.textContent = 'Key test failed: ' + errText;
-        return;
+        msg.textContent = 'Key test failed: ' + e.message;
     }
-    apiKey = v;
-    localStorage.setItem('gemini_key', v);
-    document.getElementById('key-saved-ui').style.display = 'block';
-    document.getElementById('key-input-ui').style.display = 'none';
-    document.getElementById('start-btn').disabled = false;
 }
 function showKeyInput() {
     document.getElementById('key-saved-ui').style.display = 'none';
@@ -574,41 +590,35 @@ Rules:
 - All options roughly the same length
 - The question must genuinely discriminate ${lvl} knowledge`;
 
-    for (let modelIdx=0; modelIdx<MODELS.length; modelIdx++) {
-        const model = MODELS[modelIdx];
-        for (let a=0; a<retries; a++) {
-            try {
-                const res = await fetch(GEMINI(apiKey, model), {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body: JSON.stringify({
-                        contents:[{parts:[{text:prompt}]}],
-                        generationConfig:{ temperature:0.95 }
-                    })
-                });
-                if (!res.ok) {
-                    const errBody = await res.json().catch(()=>({}));
-                    const msg = errBody?.error?.message || `HTTP ${res.status}`;
-                    throw new Error(msg);
-                }
-                const data = await res.json();
-                const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (!rawText) throw new Error('Empty response from API');
-                // Strip markdown code fences if present
-                const text = rawText.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
-                const q = JSON.parse(text);
-                if (!q.question || !Array.isArray(q.options) || q.options.length!==4
-                    || typeof q.correctIndex!=='number' || !q.explanation) throw new Error('Invalid question structure');
-                q.li=li; q.lvl=lvl; q.type=type;
-                return q;
-            } catch(e) {
-                console.warn(`Model ${model} attempt ${a+1}:`, e.message);
-                if (a===retries-1) {
-                    if (modelIdx===MODELS.length-1) throw e; // all models exhausted
-                    break; // try next model
-                }
-                await new Promise(r=>setTimeout(r, 800));
+    const model = await pickModel(apiKey);
+    for (let a=0; a<retries; a++) {
+        try {
+            const res = await fetch(GEMINI(apiKey, model), {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    contents:[{parts:[{text:prompt}]}],
+                    generationConfig:{ temperature:0.95 }
+                })
+            });
+            if (!res.ok) {
+                const errBody = await res.json().catch(()=>({}));
+                throw new Error(errBody?.error?.message || `HTTP ${res.status}`);
             }
+            const data = await res.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!rawText) throw new Error('Empty response from API');
+            // Strip markdown code fences Gemini sometimes adds
+            const text = rawText.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+            const q = JSON.parse(text);
+            if (!q.question || !Array.isArray(q.options) || q.options.length!==4
+                || typeof q.correctIndex!=='number' || !q.explanation) throw new Error('Invalid question structure from model');
+            q.li=li; q.lvl=lvl; q.type=type;
+            return q;
+        } catch(e) {
+            console.warn(`Attempt ${a+1} (${model}):`, e.message);
+            if (a===retries-1) throw e;
+            await new Promise(r=>setTimeout(r, 900));
         }
     }
 }
