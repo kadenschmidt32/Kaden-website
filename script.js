@@ -10,33 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Active nav link on scroll
-    // Uses the section whose top edge is closest to (but not past) the nav bottom,
-    // which is robust for short sections like About.
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-link');
-    const NAV_HEIGHT = 60; // matches --nav-height in CSS
 
-    function updateActiveLink() {
-        const scrollY = window.scrollY;
-        let currentId = null;
-
-        sections.forEach(section => {
-            const top = section.offsetTop - NAV_HEIGHT - 40; // 40px buffer
-            if (scrollY >= top) {
-                currentId = section.id;
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${entry.target.id}`) {
+                        link.classList.add('active');
+                    }
+                });
             }
         });
+    }, { threshold: 0.4 });
 
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${currentId}`) {
-                link.classList.add('active');
-            }
-        });
-    }
-
-    window.addEventListener('scroll', updateActiveLink, { passive: true });
-    updateActiveLink(); // run once on load
+    sections.forEach(section => observer.observe(section));
 
     // Carousel
     const track = document.querySelector('.carousel-track');
