@@ -83,6 +83,20 @@ header.hero {
     margin-bottom: 4rem;
 }
 
+.intro {
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
 section {
     margin-bottom: 4rem;
 }
@@ -155,10 +169,7 @@ section {
     border-color: #404040;
 }
 
-.cta {
-    text-align: center;
-    margin-top: 5rem;
-}
+
 
 /* Footer */
 footer {
