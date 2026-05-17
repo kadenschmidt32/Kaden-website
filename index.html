@@ -11,8 +11,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">Kaden Schmidt</a>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html#home" class="nav-links">Home</a></li>
+                <li><a href="index.html#about" class="nav-links">About</a></li>
+                <li><a href="index.html#projects" class="nav-links">Projects</a></li>
+                <li><a href="chess.html" class="nav-links">Chess</a></li>
+            </ul>
+        </div>
+    </nav>
     <div class="container">
-        <header class="hero fade-in">
+        <header id="home" class="hero fade-in">
             <h1 class="title">Kaden Schmidt</h1>
             <p class="subtitle">Aerospace Engineering Student | Chess Player | Builder</p>
             <p class="intro">Welcome to my personal portfolio. I build clean, modern, and futuristic solutions on the web and beyond.</p>
@@ -37,7 +53,7 @@
                 </div>
             </section>
 
-            <section class="about fade-in">
+            <section id="about" class="about fade-in">
                 <h2>About Me</h2>
                 <p>Hello! I'm Kaden, an aerospace engineering student with a passion for solving complex problems. When I'm not studying orbital mechanics or fluid dynamics, you can find me on the chess board.</p>
             </section>
