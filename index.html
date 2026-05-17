@@ -36,14 +36,14 @@
     <!-- ── Hero ── -->
     <section id="home" class="hero">
 
-        <!-- Left: name, intro, about -->
+        <!-- Left: name, intro, about — fills same height as photo -->
         <div class="hero-left fade-in">
-            <h1 class="title">Kaden Schmidt</h1>
-            <p class="intro">I'm Kaden, a senior aerospace engineering student. This site is where I keep track of what I'm building and working on.</p>
-
-            <div class="hero-about">
-                <h2 class="hero-about-heading">About Me</h2>
-                <p class="hero-about-text">I have many interests I like to track on this page, including basketball, pickleball, chess, piano, guitar, lifting, and running. This site follows my progress in each and features projects I've built around them.</p>
+            <div class="hero-left-inner">
+                <h1 class="title">Kaden Schmidt</h1>
+                <p class="intro">I'm Kaden, a senior aerospace engineering student. This site is where I keep track of what I'm building and working on.</p>
+                <div class="hero-divider"></div>
+                <h3 class="about-heading">About Me</h3>
+                <p class="about-text">I have many interests I like to track on this page, including basketball, pickleball, chess, piano, guitar, lifting, and running. This site follows my progress in each and features projects I've built around them.</p>
             </div>
         </div>
 
@@ -67,27 +67,48 @@
     <div class="section-divider"></div>
     <section id="explore" class="content-section fade-in">
         <h2>Explore</h2>
-        <div class="explore-grid">
-            <a href="pages/chess.html" class="explore-tile">
-                <span class="explore-icon">♟</span>
-                <span class="explore-title">Chess</span>
-                <span class="explore-desc">Play the bot · Track my rating</span>
+        <div class="page-cards-grid">
+
+            <a href="pages/chess.html" class="page-card">
+                <div class="page-card-img-wrap">
+                    <img src="images/IMG_0338chess.PNG" alt="Chess">
+                </div>
+                <div class="page-card-body">
+                    <h3>Chess</h3>
+                    <p>Play the bot · Track my rating</p>
+                </div>
             </a>
-            <a href="pages/fitness.html" class="explore-tile">
-                <span class="explore-icon">🏃</span>
-                <span class="explore-title">Fitness</span>
-                <span class="explore-desc">Lifting PRs · Run tracking</span>
+
+            <a href="pages/fitness.html" class="page-card">
+                <div class="page-card-img-wrap">
+                    <img src="images/IMG_5275.PNG" alt="Fitness">
+                </div>
+                <div class="page-card-body">
+                    <h3>Fitness</h3>
+                    <p>Lifting PRs · Run tracking</p>
+                </div>
             </a>
-            <a href="pages/pickleball.html" class="explore-tile">
-                <span class="explore-icon">🏓</span>
-                <span class="explore-title">Pickleball</span>
-                <span class="explore-desc">DUPR rating · Tournaments</span>
+
+            <a href="pages/pickleball.html" class="page-card">
+                <div class="page-card-img-wrap page-card-placeholder">
+                    <span>🏓</span>
+                </div>
+                <div class="page-card-body">
+                    <h3>Pickleball</h3>
+                    <p>DUPR rating · Tournaments</p>
+                </div>
             </a>
-            <a href="pages/germany.html" class="explore-tile">
-                <span class="explore-icon">🇩🇪</span>
-                <span class="explore-title">Germany</span>
-                <span class="explore-desc">Language progress · Year abroad</span>
+
+            <a href="pages/germany.html" class="page-card">
+                <div class="page-card-img-wrap page-card-placeholder">
+                    <span>🇩🇪</span>
+                </div>
+                <div class="page-card-body">
+                    <h3>Germany</h3>
+                    <p>Language progress · Year abroad</p>
+                </div>
             </a>
+
         </div>
     </section>
 
