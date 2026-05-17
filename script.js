@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Active nav link on scroll
     const sections = document.querySelectorAll('section[id]');
-    const navLinks = document.querySelectorAll('.nav-link');
+    const navLinks = document.querySelectorAll('.nav-link:not(.dropdown-toggle)');
     const NAV_HEIGHT = 60;
 
     function updateActiveLink() {
