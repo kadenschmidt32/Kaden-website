@@ -16,8 +16,7 @@
         <div class="nav-left">
             <a href="index.html" class="nav-brand">Kaden Schmidt</a>
             <div class="nav-links">
-                <a href="#home"  class="nav-link active">Home</a>
-                <a href="#about" class="nav-link">About</a>
+                <a href="#home" class="nav-link active">Home</a>
                 <div class="nav-dropdown">
                     <button class="nav-link dropdown-toggle">Explore &#9662;</button>
                     <div class="dropdown-menu">
@@ -32,15 +31,24 @@
         <a href="mailto:your@email.com" class="button contact-button">Contact Me</a>
     </nav>
 
+    <!-- Single hero section: left = name + about + contact, right = photos -->
     <section id="home" class="hero">
+
         <div class="hero-left fade-in">
             <h1 class="title">Kaden Schmidt</h1>
-            <p class="intro">I'm Kaden, a senior aerospace engineering student. This site is where I keep track of what I'm building and working on.</p>
-            <div class="hero-buttons">
-                <a href="#about"           class="button secondary-button">About Me</a>
-                <a href="pages/chess.html" class="button cta-button">Play Chess</a>
+
+            <div class="about-block">
+                <h2 class="about-heading">About Me</h2>
+                <p class="about-text">I have many interests I like to track on this page, including basketball, pickleball, chess, piano, guitar, lifting, and running. This site follows my progress in each and features projects I've built around them.</p>
+            </div>
+
+            <div class="contact-block">
+                <p class="contact-label">Get in touch</p>
+                <a href="mailto:your@email.com" class="contact-email">your@email.com</a>
+                <a href="mailto:your@email.com" class="button cta-button" style="margin-top:1rem;display:inline-block;">Send an Email</a>
             </div>
         </div>
+
         <div class="hero-right fade-in">
             <div class="carousel-container">
                 <button class="carousel-btn prev-btn" aria-label="Previous">&#10094;</button>
@@ -53,11 +61,7 @@
                 <button class="carousel-btn next-btn" aria-label="Next">&#10095;</button>
             </div>
         </div>
-    </section>
 
-    <section id="about" class="about fade-in">
-        <h2>About Me</h2>
-        <p>I have many interests I like to track on this page, including basketball, pickleball, chess, piano, guitar, lifting, and running. This site follows my progress in each and features projects I've built around them.</p>
     </section>
 
     <footer>
