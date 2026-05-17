@@ -32,14 +32,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const track = document.querySelector('.carousel-track');
     const nextBtn = document.querySelector('.next-btn');
     const prevBtn = document.querySelector('.prev-btn');
+    const container = document.querySelector('.carousel-container');
 
-    if (track && nextBtn && prevBtn) {
+    if (track && nextBtn && prevBtn && container) {
         let currentIndex = 0;
         const images = document.querySelectorAll('.carousel-img');
         const totalImages = images.length;
 
+        function updateCarouselHeight() {
+            const activeImg = images[currentIndex];
+            if (activeImg.complete) {
+                container.style.height = activeImg.getBoundingClientRect().height + 'px';
+            } else {
+                activeImg.onload = () => {
+                    container.style.height = activeImg.getBoundingClientRect().height + 'px';
+                };
+            }
+        }
+
         function updateCarousel() {
             track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            updateCarouselHeight();
+        }
+
+        if (totalImages > 0) {
+            updateCarouselHeight();
+            window.addEventListener('resize', updateCarouselHeight);
         }
 
         nextBtn.addEventListener('click', () => {
