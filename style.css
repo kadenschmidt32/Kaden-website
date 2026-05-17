@@ -499,6 +499,10 @@ footer {
     display: block;
 }
 
+/* Individual photo crop adjustments */
+#cimg-1 { object-position: center 65%; }
+#cimg-4 { object-position: center 65%; }
+
 .carousel-btn {
     position: absolute;
     top: 50%;
