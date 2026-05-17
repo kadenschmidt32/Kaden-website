@@ -12,9 +12,9 @@
     <style>
         /* ── Page ──────────────────────────────────────────────────── */
         .chess-page {
-            max-width: 1060px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: calc(var(--nav-height) + 2rem) 2rem 4rem;
+            padding: calc(var(--nav-height) + 1.5rem) 2rem 3rem;
         }
         .chess-header { margin-bottom: 1.5rem; }
         .chess-header h1 {
@@ -106,7 +106,7 @@
             display:flex; align-items:center; justify-content:center;
             cursor:pointer;
             font-family:'Segoe UI Symbol','Apple Symbols','Noto Chess',serif;
-            font-size:min(5.5vw,46px);
+            font-size:min(4.2vw,36px);
             line-height:1;
             transition:background .1s;
         }
@@ -160,6 +160,20 @@
             display:flex;align-items:center;justify-content:center;
         }
         .promo-btn:hover{background:rgba(255,255,255,.1);}
+
+        /* Game-over modal */
+        .gameover-box{
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:18px; padding:2.2rem 2.5rem;
+            text-align:center; max-width:360px; width:90%;
+            animation: goFadeIn .3s cubic-bezier(.16,1,.3,1);
+        }
+        @keyframes goFadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .gameover-icon{font-size:3rem; margin-bottom:.6rem; line-height:1;}
+        .gameover-msg{
+            font-size:1rem; font-weight:500; color:var(--text-primary);
+            line-height:1.5; margin-bottom:.2rem;
+        }
 
         /* ── Status ────────────────────────────────────────────────── */
         .status-bar{
@@ -332,6 +346,16 @@
     </div>
 </div>
 
+<!-- Game-over modal -->
+<div class="promo-overlay" id="gameover-overlay" style="display:none;">
+    <div class="gameover-box">
+        <div class="gameover-icon" id="gameover-icon"></div>
+        <div class="gameover-msg"  id="gameover-msg"></div>
+        <button class="ctrl-btn primary" style="margin-top:1.2rem;width:160px;"
+                onclick="closeGameover()">Play Again</button>
+    </div>
+</div>
+
 <footer>
     <p>&copy; 2026 Kaden Schmidt. All rights reserved.</p>
 </footer>
@@ -397,8 +421,66 @@ function stopClock(){ clearInterval(timerRef); }
 
 function endByTime(loser){
     stopClock(); gameActive = false; renderClocks();
-    setStatus(loser==='you' ? 'loss' : 'win',
-        loser==='you' ? '⏱ Out of time — Bot wins!' : '⏱ Bot ran out of time — You win!');
+    if(loser==='you') showGameover('loss', pick(MSG.timeoutLoss));
+    else              showGameover('win',  pick(MSG.timeoutWin));
+}
+
+// ── End-game message pools ───────────────────────────────────────────────────
+const MSG = {
+    win: [
+        { icon:'🏆', text:"Checkmate! Okay, I respect that. Kaden would want a rematch." },
+        { icon:'🏆', text:"Checkmate! Not bad at all — you've got real game." },
+        { icon:'🏆', text:"Checkmate! You got the bot. Don't let it go to your head." },
+        { icon:'🏆', text:"Checkmate! Well played. Come back and prove it wasn't luck." },
+        { icon:'🥇', text:"Checkmate! Legitimately impressive. Kaden's proud of that one." },
+    ],
+    loss: [
+        { icon:'♟', text:"Checkmate. The bot plays like Kaden on a good day — try again!" },
+        { icon:'♟', text:"Checkmate. Don't worry, even Kaden drops games sometimes. Probably." },
+        { icon:'♟', text:"Checkmate! Hit start and get your revenge." },
+        { icon:'😬', text:"Checkmate. That one stung a little, huh? You know what to do." },
+        { icon:'♟', text:"Checkmate. Kaden approves of that result. Your move." },
+    ],
+    resign: [
+        { icon:'🏳️', text:"Resigned already? The position wasn't that bad — come back stronger." },
+        { icon:'🏳️', text:"No shame in resigning, but Kaden never gives up that easy. Rematch?" },
+        { icon:'🏳️', text:"You resigned! Chess is all about fighting on — try again." },
+        { icon:'😤', text:"Resigned? Kaden once came back from a piece down. Just saying." },
+        { icon:'🏳️', text:"Fair enough. Sometimes you just know. Set up another game?" },
+    ],
+    draw: [
+        { icon:'🤝', text:"Draw! Solid defense. Kaden hates draws though — come play for the win." },
+        { icon:'🤝', text:"Draw! Half a point each. Kaden would say that's not good enough. Rematch?" },
+        { icon:'🤝', text:"Draw! A hard-fought game. Can you take the full point next time?" },
+        { icon:'🤝', text:"Draw! Neither of us wanted this. Go again and settle it." },
+    ],
+    timeoutLoss: [
+        { icon:'⏱', text:"Out of time! The clock got you — your moves were solid though." },
+        { icon:'⏱', text:"Timed out! Kaden plays fast for a reason. Come back with more urgency." },
+        { icon:'⏱', text:"Time's up! Good games are won on the clock too. Try again." },
+        { icon:'⏱', text:"Ran out of time. The position was interesting — don't leave it unfinished." },
+    ],
+    timeoutWin: [
+        { icon:'⏱', text:"Bot ran out of time — you outlasted it! Solid game." },
+        { icon:'⏱', text:"Clock win! You kept the pressure on and it paid off." },
+        { icon:'⏱', text:"Time's up for the bot. You played with patience — nice work." },
+    ],
+};
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function showGameover(type, entry){
+    // Also update the status bar underneath
+    const cls = (type==='win') ? 'win' : (type==='loss' ? 'loss' : '');
+    setStatus(cls, entry.icon + ' ' + entry.text);
+    // Show modal
+    document.getElementById('gameover-icon').textContent = entry.icon;
+    document.getElementById('gameover-msg').textContent  = entry.text;
+    document.getElementById('gameover-overlay').style.display = 'flex';
+}
+
+function closeGameover(){
+    document.getElementById('gameover-overlay').style.display = 'none';
 }
 
 // ── Chess.com rating ─────────────────────────────────────────────────────────
@@ -646,9 +728,10 @@ function updateStatus(){
     if(game.in_checkmate()){
         const botWon = game.turn()===(playerColor==='white'?'w':'b');
         gameActive=false; stopClock();
-        setStatus(botWon?'loss':'win', botWon?'♟ Checkmate — Bot wins!':'🏆 You win!');
+        showGameover(botWon?'loss':'win', pick(botWon ? MSG.loss : MSG.win));
     } else if(game.in_draw()){
-        gameActive=false; stopClock(); setStatus('','Draw — well played!');
+        gameActive=false; stopClock();
+        showGameover('draw', pick(MSG.draw));
     } else if(game.in_check()){
         setStatus('check','⚠ Check!');
     } else {
@@ -696,7 +779,7 @@ function undoMove(){
 function resignGame(){
     if(!gameActive) return;
     gameActive=false; stopClock();
-    setStatus('loss','⚑ You resigned. Better luck next time!');
+    showGameover('loss', pick(MSG.resign));
 }
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
