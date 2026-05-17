@@ -953,13 +953,18 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         return 'draw';
     }
 
-    // Percentile estimation from Chess.com rapid distribution
+    // Percentile estimation — calibrated anchor: rating 2011 = rank 91,606 = 99.70th percentile (May 2026).
+    // Total players derived: 91,606 / 0.003 = ~30.5M.
+    // Table is dense around 1900-2100 so interpolation stays tight near that range.
     function estimatePercentile(rating) {
         const table = [
-            [400,  0.5], [600,  2],  [700,  4],  [800,  8],   [900,  16],
-            [1000, 27],  [1100, 41], [1200, 55], [1300, 67],
-            [1400, 77],  [1500, 85], [1600, 91], [1700, 94.5],
-            [1800, 97],  [1900, 98.3], [2000, 99], [2200, 99.6], [2500, 99.9]
+            [400,  0.5],  [600,  2],    [700,  4],    [800,  8],   [900,  16],
+            [1000, 27],   [1100, 41],   [1200, 55],   [1300, 67],
+            [1400, 77],   [1500, 85],   [1600, 91],   [1700, 94.5],
+            [1800, 97],   [1900, 98.5], [1950, 99.1], [1980, 99.45],
+            [2000, 99.58],[2011, 99.70],  // known anchor: rank 91,606
+            [2025, 99.74],[2050, 99.77],[2100, 99.81],
+            [2200, 99.86],[2300, 99.90],[2500, 99.95]
         ];
         if (rating <= table[0][0]) return table[0][1];
         if (rating >= table[table.length-1][0]) return table[table.length-1][1];
@@ -968,15 +973,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
                 const [r0, p0] = table[i-1];
                 const [r1, p1] = table[i];
                 const t = (rating - r0) / (r1 - r0);
-                return Math.round((p0 + t * (p1 - p0)) * 10) / 10;
+                return Math.round((p0 + t * (p1 - p0)) * 100) / 100;
             }
         }
         return 50;
     }
 
-    // Chess.com has 15M+ rated rapid players
+    // Total derived from anchor: 91,606 / 0.003 = ~30.5M
     function estimateRank(percentile) {
-        const total = 15000000;
+        const total = 30535000;
         const rank  = Math.round((1 - percentile / 100) * total);
         if (rank >= 1000000) return `~${(rank / 1000000).toFixed(1)}M`;
         if (rank >= 10000)   return `~${Math.round(rank / 1000)}K`;
@@ -1042,10 +1047,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
                 <div class="gs-block">
                     <div class="gs-label">Est. Worldwide Rank</div>
                     <div class="gs-value">${rank}</div>
-                    <div class="gs-sub">out of ~15M+ rated rapid players</div>
+                    <div class="gs-sub">out of ~30.5M rated rapid players</div>
                 </div>
             </div>
-            <p class="gs-disclaimer">* Percentile and rank are estimated from Chess.com's rapid rating distribution — not pulled directly from their API.</p>`;
+            <p class="gs-disclaimer">* Estimated from Chess.com's rapid distribution, anchored to a known data point (2011 rating = rank 91,606 in May 2026).</p>`;
             requestAnimationFrame(() => setTimeout(() => {
                 const bar = document.getElementById('pct-bar');
                 if (bar) bar.style.width = pct + '%';
