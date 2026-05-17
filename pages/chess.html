@@ -797,5 +797,399 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     await initEngine();
 });
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CHESS STATS SECTION — completely separate from the bot above
+     ═══════════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+.stats-divider { width:100%; height:1px; background:var(--card-border); margin-top:2.5rem; }
+
+.chess-stats-page {
+    max-width:900px; margin:0 auto;
+    padding:2.5rem 2rem 4rem;
+}
+
+.chess-stats-page h2 {
+    font-size:1.6rem; font-weight:600; letter-spacing:-.03em;
+    background:linear-gradient(180deg,#fff 0%,#a0a0a0 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    margin-bottom:1.8rem;
+}
+
+.chess-stats-page h3 {
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--text-secondary); margin-bottom:1rem;
+}
+
+/* Rating cards row */
+.rating-cards {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:1rem; margin-bottom:1.8rem;
+}
+
+.rating-card {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:12px; padding:1.1rem 1.3rem;
+}
+
+.rating-card .rc-label {
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--text-secondary); margin-bottom:.4rem;
+}
+
+.rating-card .rc-value {
+    font-size:1.7rem; font-weight:600; color:var(--text-primary);
+    letter-spacing:-.03em; line-height:1;
+}
+
+.rating-card .rc-record {
+    font-size:.72rem; color:var(--text-secondary); margin-top:.35rem;
+}
+
+.rc-best { font-size:.72rem; color:#a0a0a0; margin-top:.2rem; }
+
+/* Stat panels */
+.stats-panel {
+    background:var(--card-bg); border:1px solid var(--card-border);
+    border-radius:12px; padding:1.4rem 1.5rem; margin-bottom:1.2rem;
+}
+
+/* Chart */
+.chart-wrap { position:relative; height:220px; }
+
+/* Openings table */
+.openings-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.openings-table th {
+    text-align:left; color:var(--text-secondary); font-weight:500;
+    padding:.4rem .6rem; border-bottom:1px solid var(--card-border);
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.06em;
+}
+.openings-table td { padding:.55rem .6rem; color:var(--text-secondary); }
+.openings-table tr:not(:last-child) td { border-bottom:1px solid rgba(255,255,255,.04); }
+.openings-table .op-name { color:var(--text-primary); font-weight:500; max-width:220px; }
+
+/* Win rate bar */
+.wr-bar-wrap { display:flex; align-items:center; gap:.5rem; min-width:120px; }
+.wr-bar { height:6px; border-radius:3px; background:var(--card-border); flex:1; overflow:hidden; }
+.wr-bar-fill { height:100%; border-radius:3px; background:#4ade80; }
+.wr-pct { font-size:.75rem; color:var(--text-primary); min-width:34px; text-align:right; }
+
+/* Time control breakdown */
+.tc-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem;
+}
+.tc-card {
+    background:rgba(255,255,255,.03); border:1px solid var(--card-border);
+    border-radius:10px; padding:1rem 1.1rem;
+}
+.tc-card .tc-label { font-size:.78rem; color:var(--text-secondary); margin-bottom:.6rem; font-weight:500; }
+.tc-row { display:flex; justify-content:space-between; font-size:.78rem; margin-bottom:.25rem; }
+.tc-row .tc-key { color:var(--text-secondary); }
+.tc-row .tc-val { font-weight:600; }
+.tc-row .tc-val.win  { color:#4ade80; }
+.tc-row .tc-val.loss { color:#ef4444; }
+.tc-row .tc-val.draw { color:#facc15; }
+
+/* Loading spinner */
+.stats-loading {
+    display:flex; align-items:center; justify-content:center;
+    padding:3rem; color:var(--text-secondary); font-size:.88rem; gap:.6rem;
+}
+.spin {
+    width:16px; height:16px; border:2px solid var(--card-border);
+    border-top-color:#a0a0a0; border-radius:50%;
+    animation:spin .7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+<div class="stats-divider"></div>
+<div class="chess-stats-page">
+    <h2>My Chess Stats</h2>
+
+    <!-- Rating cards -->
+    <div class="rating-cards" id="sc-rating-cards">
+        <div class="stats-loading"><div class="spin"></div> Loading stats…</div>
+    </div>
+
+    <!-- Rating over time -->
+    <div class="stats-panel">
+        <h3>Rapid Rating Over Time</h3>
+        <div id="sc-chart-wrap" class="chart-wrap">
+            <div class="stats-loading"><div class="spin"></div> Fetching games…</div>
+        </div>
+    </div>
+
+    <!-- Openings -->
+    <div class="stats-panel">
+        <h3>Top Openings — Win Rate (Rapid, last 3 months)</h3>
+        <div id="sc-openings">
+            <div class="stats-loading"><div class="spin"></div></div>
+        </div>
+    </div>
+
+    <!-- Time control breakdown -->
+    <div class="stats-panel">
+        <h3>Results by Time Control (last 3 months)</h3>
+        <div id="sc-tc">
+            <div class="stats-loading"><div class="spin"></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Chess Stats — independent of bot above ────────────────────────────────────
+(async function chessStats() {
+    const USER = 'kaden45';
+    const API  = `https://api.chess.com/pub/player/${USER}`;
+
+    // ── helpers ────────────────────────────────────────────────────────────────
+    function safeGet(url) {
+        return fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
+    }
+
+    function pgnHeader(pgn, key) {
+        const m = pgn.match(new RegExp(`\\[${key} "([^"]+)"\\]`));
+        return m ? m[1] : null;
+    }
+
+    function resultFor(game, user) {
+        const u = user.toLowerCase();
+        const isWhite = game.white?.username?.toLowerCase() === u;
+        const side    = isWhite ? game.white : game.black;
+        const res     = side?.result;
+        if (!res) return null;
+        if (res === 'win')                              return 'win';
+        if (['checkmated','resigned','timeout','abandoned','lose'].includes(res)) return 'loss';
+        return 'draw';
+    }
+
+    // ── 1. Current ratings ─────────────────────────────────────────────────────
+    async function loadRatingCards() {
+        const data = await safeGet(`${API}/stats`);
+        if (!data) { document.getElementById('sc-rating-cards').innerHTML = '<p style="color:#666;font-size:.85rem">Could not load stats.</p>'; return; }
+
+        const types = [
+            { key: 'chess_rapid',  label: 'Rapid'  },
+            { key: 'chess_blitz',  label: 'Blitz'  },
+            { key: 'chess_bullet', label: 'Bullet' },
+            { key: 'chess_daily',  label: 'Daily'  },
+        ];
+
+        let html = '';
+        for (const { key, label } of types) {
+            const t = data[key];
+            if (!t) continue;
+            const rating = t.last?.rating ?? '—';
+            const best   = t.best?.rating ?? '—';
+            const w = t.record?.win  ?? 0;
+            const l = t.record?.loss ?? 0;
+            const d = t.record?.draw ?? 0;
+            html += `
+            <div class="rating-card">
+                <div class="rc-label">${label}</div>
+                <div class="rc-value">${rating}</div>
+                <div class="rc-best">Best: ${best}</div>
+                <div class="rc-record">${w}W · ${l}L · ${d}D</div>
+            </div>`;
+        }
+        document.getElementById('sc-rating-cards').innerHTML = html || '<p style="color:#666">No data.</p>';
+    }
+
+    // ── 2. Fetch recent game archives (last N months) ──────────────────────────
+    async function fetchRecentGames(months = 3) {
+        const archData = await safeGet(`${API}/games/archives`);
+        if (!archData?.archives?.length) return [];
+
+        const urls  = archData.archives.slice(-months);
+        const all   = [];
+        for (const url of urls) {
+            const d = await safeGet(url);
+            if (d?.games) all.push(...d.games);
+        }
+        return all;
+    }
+
+    // ── 3. Rating over time chart ──────────────────────────────────────────────
+    async function loadRatingChart(games) {
+        const wrap = document.getElementById('sc-chart-wrap');
+
+        const rapid = games
+            .filter(g => g.time_class === 'rapid')
+            .sort((a, b) => a.end_time - b.end_time);
+
+        if (!rapid.length) {
+            wrap.innerHTML = '<p style="color:#666;font-size:.85rem;padding:1rem">No rapid games found in this period.</p>';
+            return;
+        }
+
+        const labels = [];
+        const ratings = [];
+
+        for (const g of rapid) {
+            const isWhite = g.white?.username?.toLowerCase() === USER;
+            const r = isWhite ? g.white?.rating : g.black?.rating;
+            if (!r) continue;
+            const d = new Date(g.end_time * 1000);
+            labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            ratings.push(r);
+        }
+
+        wrap.innerHTML = '<canvas id="sc-rating-canvas"></canvas>';
+
+        new Chart(document.getElementById('sc-rating-canvas'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    data: ratings,
+                    borderColor: '#f0ece6',
+                    backgroundColor: 'rgba(240,236,230,.07)',
+                    borderWidth: 2,
+                    pointRadius: ratings.length < 60 ? 3 : 0,
+                    pointHoverRadius: 5,
+                    tension: 0.3,
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        borderColor: '#2e2b26',
+                        borderWidth: 1,
+                        titleColor: '#f0ece6',
+                        bodyColor: '#a0a0a0',
+                        callbacks: {
+                            label: ctx => ` Rating: ${ctx.parsed.y}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#666',
+                            font: { size: 10 },
+                            maxTicksLimit: 8,
+                            maxRotation: 0,
+                        },
+                        grid: { color: 'rgba(255,255,255,.04)' }
+                    },
+                    y: {
+                        ticks: { color: '#666', font: { size: 10 } },
+                        grid: { color: 'rgba(255,255,255,.04)' }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── 4. Opening win rates ───────────────────────────────────────────────────
+    async function loadOpenings(games) {
+        const el = document.getElementById('sc-openings');
+
+        const rapid = games.filter(g => g.time_class === 'rapid' && g.pgn);
+        const map   = {};
+
+        for (const g of rapid) {
+            const opening = pgnHeader(g.pgn, 'Opening') || pgnHeader(g.pgn, 'ECOUrl')?.split('/').pop()?.replace(/-/g,' ') || 'Unknown';
+            const result  = resultFor(g, USER);
+            if (!result) continue;
+            if (!map[opening]) map[opening] = { win:0, loss:0, draw:0 };
+            map[opening][result]++;
+        }
+
+        const rows = Object.entries(map)
+            .map(([name, r]) => {
+                const total = r.win + r.loss + r.draw;
+                const wr    = total ? Math.round(r.win / total * 100) : 0;
+                return { name, total, wr, ...r };
+            })
+            .filter(r => r.total >= 3)
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 10);
+
+        if (!rows.length) {
+            el.innerHTML = '<p style="color:#666;font-size:.85rem">Not enough games to calculate opening stats.</p>';
+            return;
+        }
+
+        let html = `<table class="openings-table">
+            <thead><tr>
+                <th>Opening</th><th>Games</th><th>W / L / D</th><th>Win Rate</th>
+            </tr></thead><tbody>`;
+
+        for (const r of rows) {
+            html += `<tr>
+                <td class="op-name">${r.name}</td>
+                <td>${r.total}</td>
+                <td><span style="color:#4ade80">${r.win}</span> / <span style="color:#ef4444">${r.loss}</span> / <span style="color:#facc15">${r.draw}</span></td>
+                <td>
+                    <div class="wr-bar-wrap">
+                        <div class="wr-bar"><div class="wr-bar-fill" style="width:${r.wr}%"></div></div>
+                        <span class="wr-pct">${r.wr}%</span>
+                    </div>
+                </td>
+            </tr>`;
+        }
+        html += '</tbody></table>';
+        el.innerHTML = html;
+    }
+
+    // ── 5. Time control breakdown ──────────────────────────────────────────────
+    async function loadTimeControls(games) {
+        const el = document.getElementById('sc-tc');
+        const types = ['rapid','blitz','bullet','daily'];
+        const map   = {};
+
+        for (const g of games) {
+            const tc  = g.time_class;
+            if (!types.includes(tc)) continue;
+            const res = resultFor(g, USER);
+            if (!res) continue;
+            if (!map[tc]) map[tc] = { win:0, loss:0, draw:0 };
+            map[tc][res]++;
+        }
+
+        if (!Object.keys(map).length) {
+            el.innerHTML = '<p style="color:#666;font-size:.85rem">No games found.</p>';
+            return;
+        }
+
+        let html = '<div class="tc-grid">';
+        for (const tc of types) {
+            const r = map[tc];
+            if (!r) continue;
+            const total = r.win + r.loss + r.draw;
+            const wr    = total ? Math.round(r.win / total * 100) : 0;
+            html += `<div class="tc-card">
+                <div class="tc-label">${tc.charAt(0).toUpperCase()+tc.slice(1)} <span style="color:#555;font-weight:300">(${total} games)</span></div>
+                <div class="tc-row"><span class="tc-key">Wins</span>  <span class="tc-val win">${r.win}</span></div>
+                <div class="tc-row"><span class="tc-key">Losses</span><span class="tc-val loss">${r.loss}</span></div>
+                <div class="tc-row"><span class="tc-key">Draws</span> <span class="tc-val draw">${r.draw}</span></div>
+                <div class="tc-row"><span class="tc-key">Win %</span> <span class="tc-val">${wr}%</span></div>
+            </div>`;
+        }
+        html += '</div>';
+        el.innerHTML = html;
+    }
+
+    // ── Run all ────────────────────────────────────────────────────────────────
+    loadRatingCards();
+    const games = await fetchRecentGames(3);
+    await Promise.all([
+        loadRatingChart(games),
+        loadOpenings(games),
+        loadTimeControls(games),
+    ]);
+
+})();
+</script>
+
 </body>
 </html>
