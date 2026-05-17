@@ -18,6 +18,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Mobile menu toggle
+    const menuToggle = document.querySelector('#mobile-menu');
+    const navMenu = document.querySelector('.nav-menu');
+
+    if (menuToggle && navMenu) {
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('is-active');
+            navMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when a link is clicked
+        const navLinks = document.querySelectorAll('.nav-links');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                menuToggle.classList.remove('is-active');
+                navMenu.classList.remove('active');
+            });
+        });
+    }
+
+    // Scroll active link highlight (only on index.html where sections exist)
+    const sections = document.querySelectorAll('header[id], section[id]');
+    if (sections.length > 0) {
+        const navItems = document.querySelectorAll('.nav-links');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= (sectionTop - 150)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (current && item.getAttribute('href').includes(`#${current}`)) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    }
+
     // Carousel logic
     const track = document.querySelector('.carousel-track');
     const nextBtn = document.querySelector('.next-btn');
