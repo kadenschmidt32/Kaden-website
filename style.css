@@ -16,6 +16,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--nav-height) + 20px);
 }
 
 body {
@@ -147,11 +148,11 @@ body {
 
 /* ── Hero Split Layout ── */
 .hero {
-    min-height: 100vh;
+    min-height: 80vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 4rem;
-    padding: calc(var(--nav-height) + 3rem) 4rem 3rem 4rem;
+    padding: calc(var(--nav-height) + 4rem) 4rem 3rem 4rem;
     max-width: 1300px;
     margin: 0 auto;
 }
@@ -160,13 +161,13 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .hero-right {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
