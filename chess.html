@@ -4,11 +4,380 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Play Chess with Kaden</title>
-    <meta name="description" content="Play a game of chess with Kaden Schmidt. Coming soon.">
+    <meta name="description" content="Play chess against a bot calibrated to Kaden Schmidt's playstyle and rating.">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Chess libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
+    <style>
+        /* ── Chess page specific styles ── */
+        .chess-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: calc(var(--nav-height) + 2.5rem) 2rem 4rem 2rem;
+        }
+
+        .chess-header {
+            margin-bottom: 2rem;
+        }
+
+        .chess-header h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            background: linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+
+        .chess-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        /* Rating badge */
+        .rating-strip {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 0.9rem 1.4rem;
+            margin-bottom: 1.8rem;
+            flex-wrap: wrap;
+        }
+
+        .rating-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .rating-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .rating-divider {
+            width: 1px;
+            height: 28px;
+            background: var(--card-border);
+        }
+
+        .rating-note {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .rating-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 6px #4ade80;
+            animation: pulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Main layout */
+        .chess-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        /* Board wrapper */
+        .board-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.2rem;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.6rem 0;
+        }
+
+        .player-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .player-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .player-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .player-rating-tag {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-left: auto;
+            background: rgba(255,255,255,0.05);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--card-border);
+        }
+
+        #board-container {
+            width: 100%;
+            margin: 0.4rem 0;
+        }
+
+        /* chessboard.js override to fill container */
+        #chessboard {
+            width: 100% !important;
+        }
+
+        /* Side panel */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+
+        .panel-card h3 {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            margin-bottom: 0.9rem;
+        }
+
+        /* Game controls */
+        .control-btn {
+            display: block;
+            width: 100%;
+            padding: 0.65rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .control-btn:last-child { margin-bottom: 0; }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: #404040;
+        }
+
+        .control-btn.primary {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            border-color: var(--text-primary);
+        }
+
+        .control-btn.primary:hover {
+            background: #d0d0d0;
+        }
+
+        .control-btn.danger {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .control-btn.danger:hover {
+            background: rgba(239,68,68,0.1);
+        }
+
+        /* Color picker */
+        .color-pick {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+
+        .color-btn {
+            padding: 0.55rem;
+            border-radius: 7px;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-family);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .color-btn:hover, .color-btn.active {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Move list */
+        .move-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.82rem;
+            font-family: 'Courier New', monospace;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .move-list::-webkit-scrollbar { width: 4px; }
+        .move-list::-webkit-scrollbar-track { background: transparent; }
+        .move-list::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 2px; }
+
+        .move-pair {
+            display: grid;
+            grid-template-columns: 28px 1fr 1fr;
+            gap: 0.3rem;
+        }
+
+        .move-num { color: #555; }
+        .move-san { color: var(--text-secondary); }
+        .move-san:hover { color: var(--text-primary); cursor: pointer; }
+        .move-san.last { color: var(--text-primary); }
+
+        /* Status bar */
+        .status-bar {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 0.7rem 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 7px;
+            border: 1px solid var(--card-border);
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-bar.thinking {
+            color: #facc15;
+        }
+
+        .status-bar.check {
+            color: #f97316;
+        }
+
+        .status-bar.win {
+            color: #4ade80;
+        }
+
+        .status-bar.loss {
+            color: #ef4444;
+        }
+
+        /* Thinking dots */
+        .dots span {
+            animation: blink 1.2s infinite;
+            opacity: 0;
+        }
+        .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+        /* Difficulty slider */
+        .diff-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .diff-label {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .diff-value {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--card-border);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 760px) {
+            .chess-layout {
+                grid-template-columns: 1fr;
+            }
+            .side-panel {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .side-panel { grid-template-columns: 1fr; }
+            .chess-header h1 { font-size: 1.7rem; }
+        }
+    </style>
 </head>
 <body>
 
@@ -25,19 +394,380 @@
         <a href="index.html#contact" class="button contact-button">Contact Me</a>
     </nav>
 
-    <div class="page-content text-center fade-in">
-        <h1 class="title">Play Chess with Kaden</h1>
-        <div style="margin-bottom: 2rem;">
-            <img src="images/IMG_0338chess.PNG" alt="Kaden playing chess" style="max-width: 100%; max-height: 450px; height: auto; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border);">
+    <div class="chess-page fade-in">
+
+        <div class="chess-header">
+            <h1>Play Chess with Kaden</h1>
+            <p>Challenge a bot calibrated to Kaden's rapid rating — updated live from Chess.com</p>
         </div>
-        <p class="subtitle mb-4">Chess feature coming soon.</p>
-        <a href="index.html" class="button secondary-button">Return to Homepage</a>
+
+        <!-- Live rating strip -->
+        <div class="rating-strip">
+            <div class="rating-dot"></div>
+            <div>
+                <div class="rating-label">Kaden's Rapid Rating</div>
+                <div class="rating-value" id="rating-display">—</div>
+            </div>
+            <div class="rating-divider"></div>
+            <div class="rating-note" id="rating-note">Fetching from Chess.com<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+        </div>
+
+        <div class="chess-layout">
+
+            <!-- Board -->
+            <div class="board-wrap">
+                <!-- Opponent row -->
+                <div class="player-row">
+                    <div class="player-avatar" id="bot-avatar">K</div>
+                    <div class="player-name" id="bot-name">Kaden's Bot</div>
+                    <span class="player-rating-tag" id="bot-rating-tag">—</span>
+                </div>
+
+                <div id="board-container">
+                    <div id="chessboard"></div>
+                </div>
+
+                <!-- Player row -->
+                <div class="player-row">
+                    <div class="player-avatar">Y</div>
+                    <div class="player-name">You</div>
+                    <span class="player-rating-tag">Player</span>
+                </div>
+
+                <!-- Status -->
+                <div class="status-bar" id="status-bar">Choose your color and click New Game to begin.</div>
+            </div>
+
+            <!-- Side panel -->
+            <div class="side-panel">
+
+                <!-- New game / controls -->
+                <div class="panel-card">
+                    <h3>New Game</h3>
+                    <div class="color-pick" style="margin-bottom:0.8rem;">
+                        <button class="color-btn active" id="play-white" onclick="selectColor('white')">♔ White</button>
+                        <button class="color-btn" id="play-black" onclick="selectColor('black')">♚ Black</button>
+                    </div>
+                    <button class="control-btn primary" onclick="startGame()">▶ Start Game</button>
+                    <button class="control-btn" onclick="undoMove()">↩ Undo Move</button>
+                    <button class="control-btn danger" onclick="resignGame()">⚑ Resign</button>
+                </div>
+
+                <!-- Difficulty -->
+                <div class="panel-card">
+                    <h3>Bot Difficulty</h3>
+                    <div class="diff-row">
+                        <span class="diff-label">Skill level</span>
+                        <span class="diff-value" id="diff-label-val">Kaden's Level</span>
+                    </div>
+                    <input type="range" id="difficulty-slider" min="1" max="20" value="10"
+                           oninput="onDifficultyChange(this.value)">
+                    <div style="display:flex;justify-content:space-between;margin-top:0.4rem;">
+                        <span style="font-size:0.72rem;color:#555;">Beginner</span>
+                        <span style="font-size:0.72rem;color:#555;">Master</span>
+                    </div>
+                </div>
+
+                <!-- Move list -->
+                <div class="panel-card">
+                    <h3>Move History</h3>
+                    <div class="move-list" id="move-list">
+                        <span style="color:#444;font-family:var(--font-family);font-size:0.8rem;">No moves yet</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
     <footer>
         <p>&copy; 2026 Kaden Schmidt. All rights reserved.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Stockfish -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js"></script>
+
+    <script>
+    // ── State ──────────────────────────────────────────────────────────────────
+    let game = new Chess();
+    let board = null;
+    let playerColor = 'white';
+    let stockfish = null;
+    let gameActive = false;
+    let kadenRating = null;
+    let skillLevel = 10; // default, overridden once rating loads
+    let moveHistory = [];
+
+    // ── Rating → Stockfish skill level mapping ────────────────────────────────
+    // Stockfish skill 0 ≈ 800, skill 20 ≈ 3000+
+    // Linear approximation: skill = (rating - 800) / 110, clamped 0-20
+    function ratingToSkill(rating) {
+        const skill = Math.round((rating - 800) / 110);
+        return Math.max(0, Math.min(20, skill));
+    }
+
+    function skillToRatingApprox(skill) {
+        return Math.round(800 + skill * 110);
+    }
+
+    // ── Fetch Chess.com rating ────────────────────────────────────────────────
+    async function fetchRating() {
+        const ratingNote = document.getElementById('rating-note');
+        const ratingDisplay = document.getElementById('rating-display');
+        try {
+            const res = await fetch('https://api.chess.com/pub/player/kaden45/stats', {
+                headers: { 'User-Agent': 'kaden-portfolio-chess/1.0 contact:kaden45@chess.com' }
+            });
+            if (!res.ok) throw new Error('API error');
+            const data = await res.json();
+            const rapid = data.chess_rapid;
+            if (rapid && rapid.last && rapid.last.rating) {
+                kadenRating = rapid.last.rating;
+                ratingDisplay.textContent = kadenRating;
+                ratingNote.innerHTML = `Rapid · Updated from Chess.com`;
+
+                // Set skill level and slider
+                skillLevel = ratingToSkill(kadenRating);
+                document.getElementById('difficulty-slider').value = skillLevel;
+                updateDiffLabel(skillLevel);
+
+                // Update bot tag
+                document.getElementById('bot-rating-tag').textContent = kadenRating;
+                document.getElementById('bot-name').textContent = `Kaden's Bot (${kadenRating})`;
+            } else {
+                throw new Error('No rapid data');
+            }
+        } catch (e) {
+            ratingDisplay.textContent = '~1000';
+            ratingNote.innerHTML = `Could not load — using estimated rating`;
+            kadenRating = 1000;
+            skillLevel = ratingToSkill(1000);
+            document.getElementById('difficulty-slider').value = skillLevel;
+            updateDiffLabel(skillLevel);
+        }
+    }
+
+    // ── Stockfish setup ───────────────────────────────────────────────────────
+    function initStockfish() {
+        if (typeof STOCKFISH !== 'undefined') {
+            stockfish = STOCKFISH();
+        } else if (typeof Stockfish !== 'undefined') {
+            stockfish = Stockfish();
+        } else {
+            console.warn('Stockfish not loaded');
+            return;
+        }
+        stockfish.postMessage('uci');
+        stockfish.postMessage('isready');
+        stockfish.onmessage = function(event) {
+            const msg = typeof event === 'string' ? event : event.data;
+            if (msg && msg.startsWith('bestmove')) {
+                const parts = msg.split(' ');
+                const move = parts[1];
+                if (move && move !== '(none)' && gameActive) {
+                    makeBotMove(move);
+                }
+            }
+        };
+    }
+
+    function sendToStockfish(cmd) {
+        if (stockfish) stockfish.postMessage(cmd);
+    }
+
+    // ── Board setup ───────────────────────────────────────────────────────────
+    function initBoard() {
+        const config = {
+            draggable: true,
+            position: 'start',
+            orientation: playerColor,
+            pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd
+        };
+        if (board) board.destroy();
+        board = Chessboard('chessboard', config);
+        $(window).resize(board.resize);
+    }
+
+    function onDragStart(source, piece) {
+        if (!gameActive) return false;
+        if (game.game_over()) return false;
+        const turn = game.turn() === 'w' ? 'white' : 'black';
+        if (turn !== playerColor) return false;
+        if (playerColor === 'white' && piece.search(/^b/) !== -1) return false;
+        if (playerColor === 'black' && piece.search(/^w/) !== -1) return false;
+        return true;
+    }
+
+    function onDrop(source, target) {
+        const move = game.move({ from: source, to: target, promotion: 'q' });
+        if (move === null) return 'snapback';
+        recordMove(move);
+        updateStatus();
+        if (!game.game_over()) {
+            setTimeout(requestBotMove, 300);
+        }
+    }
+
+    function onSnapEnd() {
+        board.position(game.fen());
+    }
+
+    // ── Bot move ──────────────────────────────────────────────────────────────
+    function requestBotMove() {
+        if (!stockfish || !gameActive || game.game_over()) return;
+        setStatus('thinking', 'Thinking<span class="dots"><span>.</span><span>.</span><span>.</span></span>');
+        sendToStockfish(`setoption name Skill Level value ${skillLevel}`);
+        // Add slight randomness to mimic human play at this level
+        const multiPV = skillLevel < 15 ? 3 : 1;
+        sendToStockfish(`setoption name MultiPV value ${multiPV}`);
+        sendToStockfish('ucinewgame');
+        sendToStockfish(`position fen ${game.fen()}`);
+        // Think time scales loosely with skill: weaker = less think time
+        const thinkMs = 200 + skillLevel * 60;
+        sendToStockfish(`go movetime ${thinkMs}`);
+    }
+
+    function makeBotMove(uciMove) {
+        const move = game.move({
+            from: uciMove.slice(0, 2),
+            to: uciMove.slice(2, 4),
+            promotion: uciMove.length > 4 ? uciMove[4] : 'q'
+        });
+        if (move) {
+            board.position(game.fen());
+            recordMove(move);
+        }
+        updateStatus();
+    }
+
+    // ── Move history ──────────────────────────────────────────────────────────
+    function recordMove(move) {
+        moveHistory.push(move.san);
+        renderMoveList();
+    }
+
+    function renderMoveList() {
+        const el = document.getElementById('move-list');
+        if (moveHistory.length === 0) {
+            el.innerHTML = '<span style="color:#444;font-family:var(--font-family);font-size:0.8rem;">No moves yet</span>';
+            return;
+        }
+        let html = '';
+        for (let i = 0; i < moveHistory.length; i += 2) {
+            const moveNum = Math.floor(i / 2) + 1;
+            const white = moveHistory[i] || '';
+            const black = moveHistory[i + 1] || '';
+            const wClass = (i === moveHistory.length - 1) ? 'move-san last' : 'move-san';
+            const bClass = (i + 1 === moveHistory.length - 1) ? 'move-san last' : 'move-san';
+            html += `<div class="move-pair">
+                <span class="move-num">${moveNum}.</span>
+                <span class="${wClass}">${white}</span>
+                <span class="${bClass}">${black}</span>
+            </div>`;
+        }
+        el.innerHTML = html;
+        el.scrollTop = el.scrollHeight;
+    }
+
+    // ── Status ────────────────────────────────────────────────────────────────
+    function setStatus(type, msg) {
+        const el = document.getElementById('status-bar');
+        el.className = `status-bar ${type}`;
+        el.innerHTML = msg;
+    }
+
+    function updateStatus() {
+        if (game.in_checkmate()) {
+            const winner = game.turn() === 'w' ? 'Black' : 'White';
+            const youWon = (winner === 'White' && playerColor === 'white') ||
+                           (winner === 'Black' && playerColor === 'black');
+            gameActive = false;
+            setStatus(youWon ? 'win' : 'loss', youWon ? '🏆 Checkmate — You win!' : '♟ Checkmate — Bot wins!');
+        } else if (game.in_draw()) {
+            gameActive = false;
+            setStatus('', 'Draw — well played!');
+        } else if (game.in_check()) {
+            setStatus('check', '⚠ Check!');
+        } else {
+            const turn = game.turn() === 'w' ? 'White' : 'Black';
+            setStatus('', `${turn} to move`);
+        }
+    }
+
+    // ── Game controls ─────────────────────────────────────────────────────────
+    function selectColor(color) {
+        playerColor = color;
+        document.getElementById('play-white').classList.toggle('active', color === 'white');
+        document.getElementById('play-black').classList.toggle('active', color === 'black');
+    }
+
+    function startGame() {
+        game = new Chess();
+        moveHistory = [];
+        gameActive = true;
+        initBoard();
+        renderMoveList();
+        setStatus('', `${playerColor === 'white' ? 'White' : 'Black'} to move — you play ${playerColor}`);
+        sendToStockfish('ucinewgame');
+        // If player chose black, bot goes first
+        if (playerColor === 'black') {
+            setTimeout(requestBotMove, 500);
+        }
+    }
+
+    function undoMove() {
+        if (!gameActive || moveHistory.length === 0) return;
+        // Undo two moves (bot + player), or one if bot hasn't moved yet
+        game.undo();
+        moveHistory.pop();
+        if (game.turn() !== (playerColor === 'white' ? 'w' : 'b')) {
+            game.undo();
+            moveHistory.pop();
+        }
+        board.position(game.fen());
+        renderMoveList();
+        updateStatus();
+    }
+
+    function resignGame() {
+        if (!gameActive) return;
+        gameActive = false;
+        setStatus('loss', '⚑ You resigned. Better luck next time!');
+    }
+
+    function onDifficultyChange(val) {
+        skillLevel = parseInt(val);
+        updateDiffLabel(skillLevel);
+    }
+
+    function updateDiffLabel(skill) {
+        const approxRating = skillToRatingApprox(skill);
+        let label;
+        if (kadenRating && skill === ratingToSkill(kadenRating)) {
+            label = `Kaden's Level (~${kadenRating})`;
+        } else if (skill <= 3) {
+            label = `Beginner (~${approxRating})`;
+        } else if (skill <= 7) {
+            label = `Casual (~${approxRating})`;
+        } else if (skill <= 13) {
+            label = `Intermediate (~${approxRating})`;
+        } else if (skill <= 17) {
+            label = `Advanced (~${approxRating})`;
+        } else {
+            label = `Master (~${approxRating})`;
+        }
+        document.getElementById('diff-label-val').textContent = label;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchRating();
+        initStockfish();
+        initBoard();
+    });
+    </script>
 </body>
 </html>
