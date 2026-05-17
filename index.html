@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaden Schmidt | Personal Website</title>
-    <meta name="description" content="Personal website of Kaden Schmidt, Aerospace Engineering Student and Chess Player.">
+    <title>Kaden Schmidt</title>
+    <meta name="description" content="Personal website of Kaden Schmidt.">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,71 +12,52 @@
 </head>
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-left">
             <a href="index.html" class="nav-brand">Kaden Schmidt</a>
             <div class="nav-links">
-                <a href="#home" class="nav-link active">Home</a>
+                <a href="#home"  class="nav-link active">Home</a>
                 <a href="#about" class="nav-link">About</a>
-                <a href="#projects" class="nav-link">Projects</a>
-                <a href="chess.html" class="nav-link">Chess</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle">Explore &#9662;</button>
+                    <div class="dropdown-menu">
+                        <a href="pages/chess.html"      class="dropdown-item">♟ Chess</a>
+                        <a href="pages/fitness.html"    class="dropdown-item">🏃 Fitness</a>
+                        <a href="pages/pickleball.html" class="dropdown-item">🏓 Pickleball</a>
+                        <a href="pages/germany.html"    class="dropdown-item">🇩🇪 Germany</a>
+                    </div>
+                </div>
             </div>
         </div>
-        <a href="#contact" class="button contact-button">Contact Me</a>
+        <a href="mailto:your@email.com" class="button contact-button">Contact Me</a>
     </nav>
 
-    <!-- Hero: split layout -->
     <section id="home" class="hero">
         <div class="hero-left fade-in">
             <h1 class="title">Kaden Schmidt</h1>
-            <p class="intro">Hey, I'm Kaden — a senior studying aerospace engineering. I'm competitive by nature, whether that's on the basketball court, the pickleball court, or a chess board. This site is where I keep track of what I'm building and working on.</p>
+            <p class="intro">I'm Kaden, a senior aerospace engineering student. This site is where I keep track of what I'm building and working on.</p>
             <div class="hero-buttons">
-                <a href="#projects" class="button secondary-button">View Projects</a>
-                <a href="chess.html" class="button cta-button">Play Chess with Kaden</a>
+                <a href="#about"           class="button secondary-button">About Me</a>
+                <a href="pages/chess.html" class="button cta-button">Play Chess</a>
             </div>
         </div>
-
         <div class="hero-right fade-in">
             <div class="carousel-container">
-                <button class="carousel-btn prev-btn" aria-label="Previous image">&#10094;</button>
+                <button class="carousel-btn prev-btn" aria-label="Previous">&#10094;</button>
                 <div class="carousel-track">
-                    <img src="images/IMG_5273.PNG" alt="Kaden 1" class="carousel-img active">
-                    <img src="images/IMG_5274.PNG" alt="Kaden 2" class="carousel-img">
-                    <img src="images/IMG_5109.JPG" alt="Kaden 3" class="carousel-img">
-                    <img src="images/IMG_5275.PNG" alt="Kaden 4" class="carousel-img">
+                    <img src="images/IMG_5273.PNG" alt="Kaden" class="carousel-img active">
+                    <img src="images/IMG_5274.PNG" alt="Kaden" class="carousel-img">
+                    <img src="images/IMG_5109.JPG" alt="Kaden" class="carousel-img">
+                    <img src="images/IMG_5275.PNG" alt="Kaden" class="carousel-img">
                 </div>
-                <button class="carousel-btn next-btn" aria-label="Next image">&#10095;</button>
+                <button class="carousel-btn next-btn" aria-label="Next">&#10095;</button>
             </div>
         </div>
     </section>
 
-    <!-- About -->
     <section id="about" class="about fade-in">
         <h2>About Me</h2>
-        <p>I'm a senior aerospace engineering student who spends most of his free time competing at something. Basketball, pickleball, and chess are my main ones, but I also lift, run, and play piano and guitar when I need to slow down. Next July I'm heading to Germany for a year abroad. This site follows along.</p>
-    </section>
-
-    <!-- Projects -->
-    <section id="projects" class="projects fade-in">
-        <h2>Projects</h2>
-        <div class="project-grid">
-            <div class="project-card">
-                <h3>Aerospace ODE Solvers</h3>
-                <p>Developed numerical ODE solvers (RK4 and adaptive RK45) in C for a three-body gravitational simulation.</p>
-            </div>
-            <div class="project-card">
-                <h3>Orbital Mechanics Simulator</h3>
-                <p>A Python-based simulation tool for visualizing spacecraft trajectories.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact -->
-    <section id="contact" class="contact fade-in">
-        <h2>Contact Me</h2>
-        <p>Feel free to reach out for collaborations, questions, or just to say hi!</p>
-        <a href="mailto:your@email.com" class="button cta-button">Send an Email</a>
+        <p>I have many interests I like to track on this page, including basketball, pickleball, chess, piano, guitar, lifting, and running. This site follows my progress in each and features projects I've built around them.</p>
     </section>
 
     <footer>
