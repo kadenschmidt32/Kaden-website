@@ -846,6 +846,33 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 .stats-loading { display:flex; align-items:center; justify-content:center; padding:2.5rem; color:var(--text-secondary); font-size:.85rem; gap:.6rem; }
 .spin { width:14px; height:14px; border:2px solid var(--card-border); border-top-color:#888; border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── Global Standing panel ── */
+.global-standing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+.gs-block { display:flex; flex-direction:column; gap:.3rem; }
+.gs-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); }
+.gs-value { font-size:2rem; font-weight:600; color:var(--text-primary); letter-spacing:-.03em; line-height:1.1; margin-top:.2rem; }
+.gs-sub   { font-size:.72rem; color:var(--text-secondary); margin-top:.25rem; }
+.pct-bar-wrap {
+    margin-top:.6rem; background:rgba(255,255,255,.06);
+    border-radius:100px; height:6px; overflow:hidden; max-width:200px;
+}
+.pct-bar-fill {
+    height:100%; border-radius:100px;
+    background:linear-gradient(90deg,#4ade80,#22d3ee);
+    width:0; transition:width 1.2s cubic-bezier(.16,1,.3,1);
+}
+.gs-disclaimer {
+    font-size:.65rem; color:#444; margin-top:1rem; margin-bottom:0;
+}
+@media(max-width:600px){
+    .global-standing-grid { grid-template-columns:1fr; gap:1.4rem; }
+}
 </style>
 
 <div class="stats-divider"></div>
@@ -853,13 +880,20 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     <h2>My Rapid Chess Stats</h2>
 
     <div id="sc-rapid-card">
-        <div class="stats-loading"><div class="spin"></div> Loading…</div>
+        <div class="stats-loading"><div class="spin"></div> Loading...</div>
+    </div>
+
+    <div class="stats-panel">
+        <h3>Global Standing (Rapid)</h3>
+        <div id="sc-global">
+            <div class="stats-loading"><div class="spin"></div></div>
+        </div>
     </div>
 
     <div class="stats-panel">
         <h3>Rapid Rating — Past 12 Months</h3>
         <div id="sc-chart-wrap" class="chart-wrap">
-            <div class="stats-loading"><div class="spin"></div> Fetching games…</div>
+            <div class="stats-loading"><div class="spin"></div> Fetching games...</div>
         </div>
     </div>
 
@@ -883,14 +917,35 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     function safeGet(url) {
         return fetch(url).then(r => r.ok ? r.json() : null).catch(() => null);
     }
-    function pgnHeader(pgn, key) {
-        const m = pgn.match(new RegExp(`\\[${key} "([^"]+)"\\]`));
-        return m ? m[1] : null;
+
+    // Opening name extraction — tries multiple PGN headers in order
+    function openingNameFromPgn(pgn) {
+        if (!pgn) return null;
+        // 1) [Opening "..."] most explicit
+        let m = pgn.match(/\[Opening "([^"]+)"\]/);
+        if (m && m[1] !== '?' && m[1].trim()) return m[1].trim();
+        // 2) [ECOUrl "https://www.chess.com/openings/Sicilian-Defense-..."]
+        m = pgn.match(/\[ECOUrl "([^"]+)"\]/);
+        if (m) {
+            const slug = m[1].split('/openings/')[1];
+            if (slug) {
+                let name = slug.replace(/-/g, ' ');
+                // Insert colon after first major category word
+                name = name.replace(/\s(Defense|Opening|Gambit|Attack|System|Game)\s/i,
+                    (_, w) => ` ${w}: `);
+                return name.replace(/\s+/g, ' ').trim();
+            }
+        }
+        // 3) [ECO "C20"] bare code fallback
+        m = pgn.match(/\[ECO "([^"]+)"\]/);
+        if (m) return `ECO ${m[1]}`;
+        return null;
     }
-    function resultFor(game, user) {
+
+    function resultFor(g, user) {
         const u = user.toLowerCase();
-        const isWhite = game.white?.username?.toLowerCase() === u;
-        const side = isWhite ? game.white : game.black;
+        const isWhite = g.white?.username?.toLowerCase() === u;
+        const side = isWhite ? g.white : g.black;
         const res  = side?.result;
         if (!res) return null;
         if (res === 'win') return 'win';
@@ -898,24 +953,62 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         return 'draw';
     }
 
-    // ── Current rapid stats ──────────────────────────────────────────────────
+    // Percentile estimation from Chess.com rapid distribution
+    function estimatePercentile(rating) {
+        const table = [
+            [400,  0.5], [600,  2],  [700,  4],  [800,  8],   [900,  16],
+            [1000, 27],  [1100, 41], [1200, 55], [1300, 67],
+            [1400, 77],  [1500, 85], [1600, 91], [1700, 94.5],
+            [1800, 97],  [1900, 98.3], [2000, 99], [2200, 99.6], [2500, 99.9]
+        ];
+        if (rating <= table[0][0]) return table[0][1];
+        if (rating >= table[table.length-1][0]) return table[table.length-1][1];
+        for (let i = 1; i < table.length; i++) {
+            if (rating <= table[i][0]) {
+                const [r0, p0] = table[i-1];
+                const [r1, p1] = table[i];
+                const t = (rating - r0) / (r1 - r0);
+                return Math.round((p0 + t * (p1 - p0)) * 10) / 10;
+            }
+        }
+        return 50;
+    }
+
+    // Chess.com has 15M+ rated rapid players
+    function estimateRank(percentile) {
+        const total = 15000000;
+        const rank  = Math.round((1 - percentile / 100) * total);
+        if (rank >= 1000000) return `~${(rank / 1000000).toFixed(1)}M`;
+        if (rank >= 10000)   return `~${Math.round(rank / 1000)}K`;
+        return `~${rank.toLocaleString()}`;
+    }
+
+    // Current rapid stats + global standing
     async function loadRapidCard() {
         const data = await safeGet(`${API}/stats`);
         const el   = document.getElementById('sc-rapid-card');
-        if (!data?.chess_rapid) { el.innerHTML = '<p style="color:#666;font-size:.85rem">Could not load stats.</p>'; return; }
-        const r = data.chess_rapid;
-        const rating = r.last?.rating ?? '—';
+        const gel  = document.getElementById('sc-global');
+
+        if (!data?.chess_rapid) {
+            el.innerHTML  = '<p style="color:#666;font-size:.85rem">Could not load stats.</p>';
+            gel.innerHTML = '<p style="color:#666;font-size:.85rem">Could not load stats.</p>';
+            return;
+        }
+
+        const r      = data.chess_rapid;
+        const rating = r.last?.rating ?? null;
         const best   = r.best?.rating  ?? '—';
         const w = r.record?.win  ?? 0;
         const l = r.record?.loss ?? 0;
         const d = r.record?.draw ?? 0;
         const total  = w + l + d;
         const wr     = total ? Math.round(w / total * 100) : 0;
+
         el.innerHTML = `
         <div class="rapid-card">
             <div class="rc-block">
                 <div class="rc-label">Current Rating</div>
-                <div class="rc-value">${rating}</div>
+                <div class="rc-value">${rating ?? '—'}</div>
             </div>
             <div class="rc-block">
                 <div class="rc-label">Best Rating</div>
@@ -931,9 +1024,38 @@ document.addEventListener('DOMContentLoaded', async ()=>{
                 <div class="rc-sub">${total} games · ${wr}% win rate</div>
             </div>
         </div>`;
+
+        if (rating) {
+            const pct    = estimatePercentile(rating);
+            const rank   = estimateRank(pct);
+            const topPct = (100 - pct).toFixed(1);
+            gel.innerHTML = `
+            <div class="global-standing-grid">
+                <div class="gs-block">
+                    <div class="gs-label">Percentile</div>
+                    <div class="gs-value">Top ${topPct}%</div>
+                    <div class="pct-bar-wrap">
+                        <div class="pct-bar-fill" id="pct-bar"></div>
+                    </div>
+                    <div class="gs-sub">Better than ${pct}% of rated rapid players</div>
+                </div>
+                <div class="gs-block">
+                    <div class="gs-label">Est. Worldwide Rank</div>
+                    <div class="gs-value">${rank}</div>
+                    <div class="gs-sub">out of ~15M+ rated rapid players</div>
+                </div>
+            </div>
+            <p class="gs-disclaimer">* Percentile and rank are estimated from Chess.com's rapid rating distribution — not pulled directly from their API.</p>`;
+            requestAnimationFrame(() => setTimeout(() => {
+                const bar = document.getElementById('pct-bar');
+                if (bar) bar.style.width = pct + '%';
+            }, 100));
+        } else {
+            gel.innerHTML = '<p style="color:#666;font-size:.85rem">Rating unavailable.</p>';
+        }
     }
 
-    // ── Fetch last 12 months of rapid games ──────────────────────────────────
+    // Fetch last 12 months of rapid games
     async function fetchRapidGames() {
         const archData = await safeGet(`${API}/games/archives`);
         if (!archData?.archives?.length) return [];
@@ -946,9 +1068,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         return all;
     }
 
-    // ── Rating over time ─────────────────────────────────────────────────────
+    // Rating over time
     function loadRatingChart(games) {
-        const wrap = document.getElementById('sc-chart-wrap');
+        const wrap   = document.getElementById('sc-chart-wrap');
         const sorted = [...games].sort((a,b) => a.end_time - b.end_time);
         if (!sorted.length) {
             wrap.innerHTML = '<p style="color:#666;font-size:.85rem;padding:1rem">No rapid games found.</p>';
@@ -960,8 +1082,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             const isWhite = g.white?.username?.toLowerCase() === USER;
             const r = isWhite ? g.white?.rating : g.black?.rating;
             if (!r) continue;
-            const d = new Date(g.end_time * 1000);
-            labels.push(d.toLocaleDateString('en-US', { month:'short', day:'numeric' }));
+            const date = new Date(g.end_time * 1000);
+            labels.push(date.toLocaleDateString('en-US', { month:'short', day:'numeric' }));
             ratings.push(r);
         }
         wrap.innerHTML = '<canvas id="sc-canvas"></canvas>';
@@ -998,18 +1120,21 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         });
     }
 
-    // ── Opening best/worst ───────────────────────────────────────────────────
+    // Opening best/worst
     function loadOpenings(games) {
         const el  = document.getElementById('sc-openings');
         const map = {};
+
         for (const g of games) {
-            if (!g.pgn) continue;
-            const opening = pgnHeader(g.pgn, 'Opening') || 'Unknown';
-            const result  = resultFor(g, USER);
+            const opening = openingNameFromPgn(g.pgn);
+            if (!opening) continue;
+            const result = resultFor(g, USER);
             if (!result) continue;
-            if (!map[opening]) map[opening] = { win:0, loss:0, draw:0 };
-            map[opening][result]++;
+            const key = opening.length > 46 ? opening.slice(0, 43) + '...' : opening;
+            if (!map[key]) map[key] = { win:0, loss:0, draw:0 };
+            map[key][result]++;
         }
+
         const rows = Object.entries(map)
             .map(([name, r]) => {
                 const total = r.win + r.loss + r.draw;
@@ -1019,12 +1144,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             .filter(r => r.total >= 3);
 
         if (!rows.length) {
-            el.innerHTML = '<p style="color:#666;font-size:.85rem">Not enough games to show opening stats.</p>';
+            el.innerHTML = '<p style="color:#666;font-size:.85rem">Not enough games with opening data (min. 3 games per opening).</p>';
             return;
         }
 
-        const best  = [...rows].sort((a,b) => b.wr - a.wr).slice(0, 5);
-        const worst = [...rows].sort((a,b) => a.wr - b.wr).slice(0, 5);
+        const best  = [...rows].sort((a,b) => b.wr - a.wr || b.total - a.total).slice(0, 5);
+        const worst = [...rows].sort((a,b) => a.wr - b.wr || b.total - a.total).slice(0, 5);
 
         function opRows(list, cls) {
             return list.map(r => `
@@ -1038,17 +1163,17 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         el.innerHTML = `
         <div class="openings-grid">
             <div class="op-list">
-                <h4>🏆 Best Openings</h4>
+                <h4>Best Openings</h4>
                 ${opRows(best, 'good')}
             </div>
             <div class="op-list">
-                <h4>⚠ Worst Openings</h4>
+                <h4>Worst Openings</h4>
                 ${opRows(worst, 'bad')}
             </div>
         </div>`;
     }
 
-    // ── Run ──────────────────────────────────────────────────────────────────
+    // Run
     loadRapidCard();
     const games = await fetchRapidGames();
     loadRatingChart(games);
