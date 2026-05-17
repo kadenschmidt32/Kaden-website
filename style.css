@@ -108,25 +108,29 @@ body {
     cursor: pointer;
     font-family: var(--font-family);
     padding: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
 }
+
+.dropdown-toggle:hover { color: var(--text-primary); }
 
 .dropdown-menu {
     display: none;
     position: absolute;
-    top: calc(100% + 12px);
+    top: calc(100% + 14px);
     left: 0;
-    background: #111;
+    background: #111111;
     border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 0.4rem;
     min-width: 160px;
-    z-index: 999;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
-.nav-dropdown:hover .dropdown-menu {
-    display: block;
-}
+.dropdown-menu.open { display: block; }
 
 .dropdown-item {
     display: block;
