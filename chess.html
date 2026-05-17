@@ -11,32 +11,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+
     <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="nav-logo">Kaden Schmidt</a>
-            <div class="menu-toggle" id="mobile-menu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
+        <div class="nav-left">
+            <a href="index.html" class="nav-brand">Kaden Schmidt</a>
+            <div class="nav-links">
+                <a href="index.html#home" class="nav-link">Home</a>
+                <a href="index.html#about" class="nav-link">About</a>
+                <a href="index.html#projects" class="nav-link">Projects</a>
+                <a href="chess.html" class="nav-link active">Chess</a>
             </div>
-            <ul class="nav-menu">
-                <li><a href="index.html#home" class="nav-links">Home</a></li>
-                <li><a href="index.html#about" class="nav-links">About</a></li>
-                <li><a href="index.html#projects" class="nav-links">Projects</a></li>
-                <li><a href="chess.html" class="nav-links active">Chess</a></li>
-            </ul>
         </div>
+        <a href="index.html#contact" class="button contact-button">Contact Me</a>
     </nav>
-    <div class="container center-full">
-        <main class="fade-in text-center">
-            <h1 class="title">Play Chess with Kaden</h1>
-            <div style="margin-bottom: 2rem;">
-                <img src="images/IMG_0338chess.PNG" alt="Kaden playing chess" style="max-width: 100%; height: auto; border-radius: 12px; max-height: 400px; object-fit: cover; border: 1px solid var(--card-border);">
-            </div>
-            <p class="subtitle mb-4">Chess feature coming soon.</p>
-            <a href="index.html" class="button secondary-button">Return to Homepage</a>
-        </main>
+
+    <div class="page-content text-center fade-in">
+        <h1 class="title">Play Chess with Kaden</h1>
+        <div style="margin-bottom: 2rem;">
+            <img src="images/IMG_0338chess.PNG" alt="Kaden playing chess" style="max-width: 100%; max-height: 450px; height: auto; border-radius: 12px; object-fit: cover; border: 1px solid var(--card-border);">
+        </div>
+        <p class="subtitle mb-4">Chess feature coming soon.</p>
+        <a href="index.html" class="button secondary-button">Return to Homepage</a>
     </div>
+
+    <footer>
+        <p>&copy; 2026 Kaden Schmidt. All rights reserved.</p>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
