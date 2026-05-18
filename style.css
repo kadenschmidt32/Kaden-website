@@ -576,7 +576,6 @@ footer {
     border: 2px solid var(--card-border);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
     flex-shrink: 0;
-    filter: contrast(1.06) saturate(1.12) brightness(1.01);
 }
 
 .hero-name-block {
@@ -703,7 +702,7 @@ footer {
 
 /* ── Photo improvements ── */
 .carousel-img {
-    filter: contrast(1.06) saturate(1.12) brightness(1.02);
+    filter: blur(0.4px) contrast(1.04) saturate(1.08) brightness(1.02);
 }
 
 .page-card-img-wrap img {
