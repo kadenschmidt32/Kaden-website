@@ -416,7 +416,8 @@ const TYPE_DESC = {
 const TOTAL = 20;
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
-// Dynamically discover the best available model for this API key
+// Dynamically discover the best available model for this API key.
+// Prefer 2.0-flash / 1.5-flash — they have better free-tier RPM than 2.5-flash.
 async function pickModel(key) {
     const cached = sessionStorage.getItem('gemini_model');
     if (cached) return cached;
@@ -427,12 +428,14 @@ async function pickModel(key) {
     }
     const data = await res.json();
     const all = (data.models || [])
-        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+        .filter(m => m.supportedGenerationMethods?.includes('generateContent')
+                  && !m.name.includes('embed') && !m.name.includes('aqa'))
         .map(m => m.name.replace('models/', ''));
-    // Prefer flash/fast models; avoid vision-only or embedding models
-    const order = ['flash','pro','gemini'];
-    for (const keyword of order) {
-        const match = all.find(m => m.toLowerCase().includes(keyword) && !m.includes('embed'));
+    // Explicit preference order — avoid 2.5 on free tier (tighter quota)
+    const preferred = ['2.0-flash', '1.5-flash', '2.0-flash-lite', '1.5-flash-8b',
+                        'flash', '2.5-flash', 'pro'];
+    for (const pref of preferred) {
+        const match = all.find(m => m.includes(pref));
         if (match) { sessionStorage.setItem('gemini_model', match); return match; }
     }
     if (all.length) { sessionStorage.setItem('gemini_model', all[0]); return all[0]; }
@@ -444,7 +447,8 @@ const GEMINI = (key, model) =>
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let apiKey = '', theta = 3.0, qNum = 0, answers = [],
-    covered = [], selIdx = null, curQ = null, chartInst = null;
+    covered = [], selIdx = null, curQ = null, chartInst = null,
+    prefetchedQ = null, prefetchPromise = null;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -539,6 +543,7 @@ function renderGraph() {
 // ── Test start ────────────────────────────────────────────────────────────────
 function startTest() {
     theta=3.0; qNum=0; answers=[]; covered=[]; selIdx=null; curQ=null;
+    prefetchedQ=null; prefetchPromise=null;
     show('test');
     loadNext();
 }
@@ -603,6 +608,17 @@ Rules:
             });
             if (!res.ok) {
                 const errBody = await res.json().catch(()=>({}));
+                if (res.status === 429) {
+                    // Rate limited — extract retry-after and wait
+                    const retryAfter = parseFloat(
+                        res.headers.get('retry-after') ||
+                        errBody?.error?.details?.find(d=>d.retryDelay)?.retryDelay?.replace('s','') || '10'
+                    );
+                    const wait = Math.min(retryAfter, 30) * 1000;
+                    console.warn(`Rate limited — waiting ${wait/1000}s`);
+                    await new Promise(r=>setTimeout(r, wait));
+                    a--; continue; // retry same attempt
+                }
                 throw new Error(errBody?.error?.message || `HTTP ${res.status}`);
             }
             const data = await res.json();
@@ -624,6 +640,18 @@ Rules:
 }
 
 // ── Display ───────────────────────────────────────────────────────────────────
+// Start pre-fetching the next question in the background.
+// Uses current theta (before the user answers) — level may be ±1 off but
+// eliminates the 15-20s wait between questions.
+function startPrefetch() {
+    if (qNum >= TOTAL - 1) return;          // no next question after the last
+    if (prefetchPromise) return;            // already fetching
+    const li = levelIdx();                  // best guess at next level
+    prefetchPromise = generateQ(li)
+        .then(q  => { prefetchedQ = q; prefetchPromise = null; })
+        .catch(() => { prefetchedQ = null; prefetchPromise = null; });
+}
+
 async function loadNext() {
     selIdx = null;
     const n   = qNum+1;
@@ -640,20 +668,35 @@ async function loadNext() {
     nb.disabled = true;
     nb.textContent = qNum < TOTAL-1 ? 'Next Question →' : 'Finish Test →';
 
-    document.getElementById('q-area').innerHTML =
-        `<div class="loading-card"><div class="spin"></div><div class="loading-msg">Generating ${lvl} question…</div></div>`;
-
     try {
-        curQ = await generateQ(li);
+        if (prefetchedQ) {
+            // Pre-fetch ready — instant display
+            curQ = prefetchedQ;
+            prefetchedQ = null;
+            prefetchPromise = null;
+        } else {
+            // Nothing pre-fetched yet — wait for it (first question, or prefetch failed)
+            document.getElementById('q-area').innerHTML =
+                `<div class="loading-card"><div class="spin"></div><div class="loading-msg">Generating ${lvl} question…</div></div>`;
+            if (prefetchPromise) {
+                await prefetchPromise;  // wait for in-progress fetch
+                prefetchPromise = null;
+                if (prefetchedQ) { curQ = prefetchedQ; prefetchedQ = null; }
+                else curQ = await generateQ(li);
+            } else {
+                curQ = await generateQ(li);
+            }
+        }
         covered.push(curQ.topic);
         displayQ(curQ);
+        startPrefetch(); // kick off next question immediately
     } catch(e) {
         const errMsg = e.message || 'Unknown error';
         document.getElementById('q-area').innerHTML =
             `<div class="loading-card"><div class="loading-msg" style="color:#ef4444">
             <strong>Error:</strong> ${errMsg}<br>
             <span style="font-size:.75rem;color:#666;display:block;margin-top:.4rem">
-            Check: key is correct · Generative Language API is enabled in Google Cloud · no usage limits hit</span>
+            Check: key is correct · API enabled · no quota hit</span>
             <button onclick="loadNext()" style="margin-top:.9rem;background:none;border:1px solid #444;
             color:#aaa;padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-family:var(--font-family);">
             Retry</button></div></div>`;
