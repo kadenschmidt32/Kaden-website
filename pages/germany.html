@@ -358,7 +358,7 @@
         <div class="g-panel">
             <div class="g-label">Departure Countdown</div>
             <div class="countdown-number" id="countdown-days">—</div>
-            <div class="countdown-sub">days until departure &nbsp;·&nbsp; July 14, 2026</div>
+            <div class="countdown-sub">days until departure &nbsp;·&nbsp; July 30, 2026</div>
         </div>
 
         <!-- CBYX info + timeline -->
@@ -368,8 +368,8 @@
                 The Congress-Bundestag Youth Exchange (CBYX) is a fully-funded scholarship sponsored by the U.S. Congress and the German Bundestag. It sends American students to Germany for a year of cultural immersion, intensive language learning, academic study, and professional internship experience — all while living with a German host family.
             </p>
             <div class="cbyx-timeline">
-                <div class="cbyx-step">
-                    <div class="cbyx-step-label">July 2026 — Depart</div>
+                <div class="cbyx-step cbyx-step--last">
+                    <div class="cbyx-step-label">July 30, 2026 — Depart</div>
                     <div class="cbyx-step-desc">Fly to Germany and begin cultural orientation.</div>
                 </div>
                 <div class="cbyx-step">
@@ -384,7 +384,7 @@
                     <div class="cbyx-step-label">Feb – Jun 2027 — Internship</div>
                     <div class="cbyx-step-desc">Professional internship at a German company or organization, putting language skills to work.</div>
                 </div>
-                <div class="cbyx-step cbyx-step--last">
+                <div class="cbyx-step">
                     <div class="cbyx-step-label">June 2027 — Return Home</div>
                     <div class="cbyx-step-desc">Complete the exchange and return to the United States.</div>
                 </div>
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Countdown ─────────────────────────────────────────────────────────────────
 function updateCountdown() {
-    const departure = new Date('2026-07-14');
+    const departure = new Date('2026-07-30');
     const now = new Date();
     const diff = departure - now;
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
