@@ -1,6 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Kaden's Personal Website loaded successfully.");
 
+    // Scroll-triggered fade-in for .scroll-fade elements
+    const scrollFadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                scrollFadeObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.scroll-fade').forEach(el => scrollFadeObserver.observe(el));
+
     // Button press effect
     const buttons = document.querySelectorAll('.button');
     buttons.forEach(button => {

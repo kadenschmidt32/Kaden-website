@@ -558,3 +558,188 @@ footer {
     .nav-brand { font-size: 0.9rem; }
     .title { font-size: 2.2rem; }
 }
+
+/* ── Hero headshot & tagline ── */
+.hero-name-row {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-bottom: 1.2rem;
+}
+
+.hero-headshot {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center top;
+    border: 2px solid var(--card-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    flex-shrink: 0;
+    filter: contrast(1.06) saturate(1.12) brightness(1.01);
+}
+
+.hero-name-block {
+    flex: 1;
+    min-width: 0;
+}
+
+.hero-tagline {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin: 0.18rem 0 0;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+}
+
+/* ── Social link pills (hero) ── */
+.hero-social-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0.42rem 0.88rem;
+    border-radius: 20px;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.social-btn:hover {
+    border-color: #505050;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-1px);
+}
+
+/* ── Rich footer ── */
+.site-footer {
+    border-top: 1px solid var(--card-border);
+    padding: 2.8rem 2rem;
+}
+
+.footer-inner {
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.1rem;
+    text-align: center;
+}
+
+.footer-social {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.footer-icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.footer-icon-btn:hover {
+    border-color: #505050;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-2px);
+}
+
+.footer-resume-btn {
+    display: inline-block;
+    padding: 0.55rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.footer-resume-btn:hover {
+    background: var(--card-bg);
+    border-color: #454035;
+}
+
+.footer-copy {
+    font-size: 0.78rem;
+    color: #4a4640;
+    margin: 0;
+}
+
+/* ── Scroll-triggered fade-in ── */
+.scroll-fade {
+    opacity: 0;
+}
+
+@keyframes scrollFadeIn {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.scroll-fade.in-view {
+    animation: scrollFadeIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Photo improvements ── */
+.carousel-img {
+    filter: contrast(1.06) saturate(1.12) brightness(1.02);
+}
+
+.page-card-img-wrap img {
+    filter: contrast(1.06) saturate(1.1) brightness(1.02);
+    transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+.page-card:hover .page-card-img-wrap img {
+    transform: scale(1.05);
+    filter: contrast(1.08) saturate(1.18) brightness(1.03);
+}
+
+/* ── Explore card polish ── */
+.page-card {
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.28s ease,
+                box-shadow 0.28s ease;
+}
+
+.page-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+}
+
+.page-card-placeholder {
+    transition: transform 0.28s ease;
+}
+
+.page-card:hover .page-card-placeholder {
+    transform: scale(1.08);
+}
+
+@media (max-width: 600px) {
+    .hero-name-row { gap: 0.85rem; }
+    .hero-headshot  { width: 70px; height: 70px; }
+    .hero-social-row { gap: 0.5rem; }
+}
