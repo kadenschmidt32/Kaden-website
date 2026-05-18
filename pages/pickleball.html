@@ -8,31 +8,380 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .pb-page {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: calc(var(--nav-height) + 2.5rem) 2rem 5rem;
+        }
+
+        /* ── Panels ── */
+        .pb-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.5rem 1.7rem;
+            margin-bottom: 1.3rem;
+        }
+        .pb-label {
+            font-size: .72rem; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--text-secondary);
+            margin-bottom: 1.1rem;
+        }
+
+        .spin {
+            width: 16px; height: 16px; border: 2px solid var(--card-border);
+            border-top-color: #888; border-radius: 50%;
+            animation: spin .7s linear infinite; flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Graph ── */
+        .graph-wrap { position: relative; height: 220px; }
+        .graph-empty {
+            height: 220px; display: flex; align-items: center;
+            justify-content: center; color: #444; font-size: .85rem;
+            flex-direction: column; gap: .4rem; text-align: center;
+        }
+        .graph-empty span { font-size: 1.5rem; }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: flex; gap: 2rem; flex-wrap: wrap;
+            margin-bottom: 1.4rem; padding-bottom: 1.4rem;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+        }
+        .stat-block { }
+        .stat-val {
+            font-size: 2rem; font-weight: 600;
+            color: var(--text-primary); letter-spacing: -.03em; line-height: 1;
+        }
+        .stat-lbl {
+            font-size: .68rem; text-transform: uppercase;
+            letter-spacing: .07em; color: var(--text-secondary); margin-top: .3rem;
+        }
+
+        /* ── Matches table ── */
+        .match-table {
+            width: 100%; border-collapse: collapse; font-size: .85rem;
+        }
+        .match-table th {
+            text-align: left; padding: .5rem .6rem;
+            font-size: .68rem; text-transform: uppercase;
+            letter-spacing: .07em; color: var(--text-secondary);
+            border-bottom: 1px solid var(--card-border); font-weight: 400;
+        }
+        .match-table td {
+            padding: .7rem .6rem;
+            border-bottom: 1px solid rgba(255,255,255,.04);
+            color: var(--text-secondary); vertical-align: middle;
+        }
+        .match-table tr:last-child td { border-bottom: none; }
+        .match-table td:first-child { color: var(--text-primary); }
+        .badge-w { color: #4ade80; font-weight: 600; font-size: .75rem; }
+        .badge-l { color: #ef4444; font-weight: 600; font-size: .75rem; }
+
+        .matches-empty {
+            padding: 2rem; text-align: center;
+            color: #444; font-size: .85rem;
+        }
+
+        /* ── Add match ── */
+        .add-match-btn {
+            background: none; border: 1px solid var(--card-border);
+            border-radius: 8px; padding: .5rem 1rem;
+            color: var(--text-secondary); font-family: var(--font-family);
+            font-size: .82rem; cursor: pointer; transition: all .2s;
+            float: right; margin-top: -.1rem;
+        }
+        .add-match-btn:hover { border-color: #505050; color: var(--text-primary); }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,.6);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .modal-box {
+            background: var(--card-bg); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 1.8rem 2rem;
+            width: 90%; max-width: 400px;
+            animation: fadeUp .25s cubic-bezier(.16,1,.3,1);
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+        .modal-box h3 {
+            font-size: 1rem; font-weight: 600; margin-bottom: 1.2rem;
+            color: var(--text-primary);
+        }
+        .field-group { margin-bottom: .9rem; }
+        .field-label {
+            font-size: .7rem; text-transform: uppercase;
+            letter-spacing: .07em; color: var(--text-secondary);
+            margin-bottom: .35rem; display: block;
+        }
+        .field-input, .field-select {
+            width: 100%;
+            background: rgba(255,255,255,.04);
+            border: 1px solid var(--card-border); border-radius: 7px;
+            padding: .58rem .85rem; color: var(--text-primary);
+            font-family: var(--font-family); font-size: .88rem;
+            outline: none; box-sizing: border-box;
+        }
+        .field-select option { background: #1c1a17; }
+        .field-input:focus, .field-select:focus { border-color: #505050; }
+        .modal-btns { display: flex; gap: .6rem; margin-top: 1.3rem; }
+        .modal-save {
+            flex: 1; padding: .65rem; border-radius: 8px; border: none;
+            background: var(--text-primary); color: var(--bg-color);
+            font-family: var(--font-family); font-size: .9rem;
+            font-weight: 600; cursor: pointer; transition: background .2s;
+        }
+        .modal-save:hover { background: #d0d0d0; }
+        .modal-cancel {
+            flex: 1; padding: .65rem; border-radius: 8px;
+            border: 1px solid var(--card-border); background: none;
+            color: var(--text-secondary); font-family: var(--font-family);
+            font-size: .9rem; cursor: pointer; transition: all .2s;
+        }
+        .modal-cancel:hover { color: var(--text-primary); border-color: #505050; }
+
+        @media (max-width: 600px) {
+            .search-row { flex-direction: column; }
+            .loc-input, .radius-select, .search-btn { width: 100%; }
+            .stats-row { gap: 1.2rem; }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-left">
-            <a href="../index.html" class="nav-brand">Kaden Schmidt</a>
-            <div class="nav-links">
-                <a href="../index.html" class="nav-link">Home</a>
-                <div class="nav-dropdown">
-                    <button class="nav-link dropdown-toggle">Explore &#9662;</button>
-                    <div class="dropdown-menu">
-                        <a href="chess.html"      class="dropdown-item">&#9820; Chess</a>
-                        <a href="fitness.html"    class="dropdown-item">&#127939; Fitness</a>
-                        <a href="pickleball.html" class="dropdown-item">&#127955; Pickleball</a>
-                        <a href="germany.html"    class="dropdown-item">&#127465;&#127466; Germany</a>
-                    </div>
+
+<nav class="navbar">
+    <div class="nav-left">
+        <a href="../index.html" class="nav-brand">Kaden Schmidt</a>
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <div class="nav-dropdown">
+                <button class="nav-link dropdown-toggle">Explore &#9662;</button>
+                <div class="dropdown-menu">
+                    <a href="chess.html"      class="dropdown-item">♟ Chess</a>
+                    <a href="fitness.html"    class="dropdown-item">🏃 Fitness</a>
+                    <a href="pickleball.html" class="dropdown-item">🏓 Pickleball</a>
+                    <a href="germany.html"    class="dropdown-item">🇩🇪 Germany</a>
                 </div>
             </div>
         </div>
-        <a href="mailto:your@email.com" class="button contact-button">Contact Me</a>
-    </nav>
-    <div class="page-content fade-in">
-        <h1 class="title">Pickleball</h1>
-        <p class="intro">DUPR rating tracker and tournament results — coming soon.</p>
     </div>
-    <footer><p>&copy; 2026 Kaden Schmidt. All rights reserved.</p></footer>
-    <script src="../script.js"></script>
+    <a href="mailto:kadenschmidt32@gmail.com" class="button contact-button">Contact Me</a>
+</nav>
+
+<div class="pb-page fade-in">
+
+    <h1 class="title">Pickleball</h1>
+    <p class="intro">Planning to enter tournaments this summer. Tracking local events, match results, and DUPR rating progress here.</p>
+
+    <!-- ── DUPR Rating ── -->
+    <div class="pb-panel">
+        <div class="pb-label">DUPR Rating &amp; Progress</div>
+
+        <div class="stats-row">
+            <div class="stat-block">
+                <div class="stat-val" id="dupr-rating">—</div>
+                <div class="stat-lbl">Current DUPR</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-val" id="dupr-peak">—</div>
+                <div class="stat-lbl">Peak Rating</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-val" id="match-count">0</div>
+                <div class="stat-lbl">Rated Matches</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-val" id="win-pct">—</div>
+                <div class="stat-lbl">Win Rate</div>
+            </div>
+        </div>
+
+        <div id="dupr-graph-empty" class="graph-empty">
+            <span>📊</span>
+            No rating data yet — play some rated matches to start tracking.
+        </div>
+        <div class="graph-wrap" id="dupr-graph-wrap" style="display:none">
+            <canvas id="dupr-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- ── Recent Matches ── -->
+    <div class="pb-panel">
+        <div class="pb-label" style="float:left">Recent Matches</div>
+        <button class="add-match-btn" onclick="openModal()">+ Log Match</button>
+        <div style="clear:both; margin-bottom:.8rem"></div>
+
+        <div id="matches-container">
+            <div class="matches-empty">No matches logged yet — results will appear here after your first tournament.</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Add Match Modal ── -->
+<div class="modal-overlay" id="match-modal" style="display:none" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+        <h3>Log a Match</h3>
+        <div class="field-group">
+            <label class="field-label">Date</label>
+            <input type="date" class="field-input" id="m-date">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Tournament / Event</label>
+            <input type="text" class="field-input" id="m-tourney" placeholder="e.g. Sioux Falls Open">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Opponent(s)</label>
+            <input type="text" class="field-input" id="m-opponent" placeholder="e.g. John Smith / Jane Doe">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Score</label>
+            <input type="text" class="field-input" id="m-score" placeholder="e.g. 11-7, 11-9">
+        </div>
+        <div class="field-group">
+            <label class="field-label">Result</label>
+            <select class="field-select" id="m-result">
+                <option value="W">Win</option>
+                <option value="L">Loss</option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-save"   onclick="saveMatch()">Save Match</button>
+        </div>
+    </div>
+</div>
+
+<footer><p>&copy; 2026 Kaden Schmidt. All rights reserved.</p></footer>
+
+<script src="../script.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  Pickleball Page
+// ════════════════════════════════════════════════════════════
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('m-date').valueAsDate = new Date();
+    renderMatches();
+    renderDUPRGraph();
+});
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── DUPR Graph ────────────────────────────────────────────────────────────────
+function renderDUPRGraph() {
+    const history = JSON.parse(localStorage.getItem('dupr_history') || '[]');
+    const matches = JSON.parse(localStorage.getItem('pb_matches')   || '[]');
+
+    // Update stat blocks
+    const wins  = matches.filter(m=>m.result==='W').length;
+    const total = matches.length;
+    document.getElementById('match-count').textContent = total;
+    document.getElementById('win-pct').textContent     = total ? Math.round(wins/total*100)+'%' : '—';
+
+    if (!history.length) return;
+
+    const peak = Math.max(...history.map(h=>h.rating));
+    document.getElementById('dupr-rating').textContent = history[history.length-1].rating.toFixed(3);
+    document.getElementById('dupr-peak').textContent   = peak.toFixed(3);
+
+    document.getElementById('dupr-graph-empty').style.display = 'none';
+    document.getElementById('dupr-graph-wrap').style.display  = 'block';
+
+    const labels = history.map(h=>h.date);
+    const data   = history.map(h=>h.rating);
+
+    new Chart(document.getElementById('dupr-chart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{ data, borderColor:'#f0ece6', backgroundColor:'rgba(240,236,230,.06)',
+                borderWidth:2, pointRadius:4, pointHoverRadius:6, tension:0.3, fill:true }]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false,
+            plugins: {
+                legend:{ display:false },
+                tooltip:{
+                    backgroundColor:'#1a1a1a', borderColor:'#2e2b26', borderWidth:1,
+                    titleColor:'#f0ece6', bodyColor:'#a0a0a0',
+                    callbacks:{ label: ctx => ` DUPR: ${ctx.parsed.y.toFixed(3)}` }
+                }
+            },
+            scales:{
+                x:{ ticks:{ color:'#555', font:{size:11} }, grid:{ color:'rgba(255,255,255,.04)' } },
+                y:{ ticks:{ color:'#555', font:{size:11} }, grid:{ color:'rgba(255,255,255,.04)' } }
+            }
+        }
+    });
+}
+
+// ── Matches ───────────────────────────────────────────────────────────────────
+function renderMatches() {
+    const matches  = JSON.parse(localStorage.getItem('pb_matches') || '[]');
+    const container = document.getElementById('matches-container');
+
+    if (!matches.length) {
+        container.innerHTML = `<div class="matches-empty">No matches logged yet — results will appear here after your first tournament.</div>`;
+        return;
+    }
+
+    const rows = [...matches].reverse().map(m => `
+        <tr>
+            <td>${m.date}</td>
+            <td>${esc(m.tourney||'—')}</td>
+            <td>${esc(m.opponent||'—')}</td>
+            <td>${esc(m.score||'—')}</td>
+            <td><span class="${m.result==='W'?'badge-w':'badge-l'}">${m.result}</span></td>
+        </tr>`).join('');
+
+    container.innerHTML = `
+        <table class="match-table">
+            <thead><tr>
+                <th>Date</th><th>Tournament</th><th>Opponent(s)</th><th>Score</th><th>Result</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal()  { document.getElementById('match-modal').style.display = 'flex'; }
+function closeModal() { document.getElementById('match-modal').style.display = 'none'; }
+
+function saveMatch() {
+    const d = document.getElementById('m-date').value;
+    const t = document.getElementById('m-tourney').value.trim();
+    const o = document.getElementById('m-opponent').value.trim();
+    const s = document.getElementById('m-score').value.trim();
+    const r = document.getElementById('m-result').value;
+
+    if (!d || !o) { alert('Date and opponent are required.'); return; }
+
+    const matches = JSON.parse(localStorage.getItem('pb_matches') || '[]');
+    matches.push({ date: d, tourney: t, opponent: o, score: s, result: r });
+    localStorage.setItem('pb_matches', JSON.stringify(matches));
+
+    closeModal();
+    renderMatches();
+    renderDUPRGraph();
+
+    // Reset form
+    document.getElementById('m-tourney').value  = '';
+    document.getElementById('m-opponent').value = '';
+    document.getElementById('m-score').value    = '';
+    document.getElementById('m-result').value   = 'W';
+    document.getElementById('m-date').valueAsDate = new Date();
+}
+</script>
+
 </body>
 </html>
