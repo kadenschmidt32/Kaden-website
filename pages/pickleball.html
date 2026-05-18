@@ -10,12 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        .pb-page {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: calc(var(--nav-height) + 2.5rem) 2rem 5rem;
-        }
-
         /* ── Panels ── */
         .pb-panel {
             background: var(--card-bg);
@@ -24,6 +18,7 @@
             padding: 1.5rem 1.7rem;
             margin-bottom: 1.3rem;
         }
+        .pb-panel:last-child { margin-bottom: 0; }
         .pb-label {
             font-size: .72rem; text-transform: uppercase;
             letter-spacing: .08em; color: var(--text-secondary);
@@ -62,7 +57,7 @@
             letter-spacing: .07em; color: var(--text-secondary); margin-top: .3rem;
         }
 
-        /* ── Matches table ── */
+        /* ── Matches / tournaments table ── */
         .match-table {
             width: 100%; border-collapse: collapse; font-size: .85rem;
         }
@@ -147,8 +142,6 @@
         .modal-cancel:hover { color: var(--text-primary); border-color: #505050; }
 
         @media (max-width: 600px) {
-            .search-row { flex-direction: column; }
-            .loc-input, .radius-select, .search-btn { width: 100%; }
             .stats-row { gap: 1.2rem; }
         }
     </style>
@@ -160,15 +153,16 @@
         <a href="../index.html" class="nav-brand">Kaden Schmidt</a>
         <div class="nav-links">
             <a href="../index.html" class="nav-link">Home</a>
-            <a href="#rating" class="nav-link">Rating</a>
-            <a href="#matches" class="nav-link">Matches</a>
+            <a href="#my-rating" class="nav-link">My Rating</a>
+            <a href="#tournaments" class="nav-link">Tournaments</a>
+            <a href="#match-history" class="nav-link">Match History</a>
             <div class="nav-dropdown">
                 <button class="nav-link dropdown-toggle">Pages &#9662;</button>
                 <div class="dropdown-menu">
-                    <a href="chess.html"      class="dropdown-item">♟ Chess</a>
-                    <a href="fitness.html"    class="dropdown-item">🏃 Fitness</a>
-                    <a href="pickleball.html" class="dropdown-item">🏓 Pickleball</a>
-                    <a href="germany.html"    class="dropdown-item">🇩🇪 Germany</a>
+                    <a href="chess.html"      class="dropdown-item">&#9820; Chess</a>
+                    <a href="fitness.html"    class="dropdown-item">&#127939; Fitness</a>
+                    <a href="pickleball.html" class="dropdown-item">&#127955; Pickleball</a>
+                    <a href="germany.html"    class="dropdown-item">&#127465;&#127466; Germany</a>
                 </div>
             </div>
         </div>
@@ -176,56 +170,72 @@
     <a href="mailto:kadenschmidt32@gmail.com" class="button contact-button">Contact Me</a>
 </nav>
 
-<div class="pb-page fade-in">
+<div class="page-wrapper fade-in">
 
     <h1 class="title">Pickleball</h1>
-    <p class="intro">Planning to enter tournaments this summer. Tracking local events, match results, and DUPR rating progress here.</p>
+    <p class="intro">My DUPR rating, recent tournaments, and match history.</p>
+    <div class="page-header-divider"></div>
 
-    <!-- ── DUPR Rating ── -->
-    <section id="rating">
-    <div class="pb-panel">
-        <div class="pb-label">DUPR Rating &amp; Progress</div>
+    <!-- ── Section 1: My Rating ── -->
+    <section id="my-rating" class="subpage-section scroll-fade">
+        <h2 class="section-heading">My Rating</h2>
 
-        <div class="stats-row">
-            <div class="stat-block">
-                <div class="stat-val" id="dupr-rating">—</div>
-                <div class="stat-lbl">Current DUPR</div>
+        <div class="pb-panel">
+            <div class="pb-label">DUPR Rating &amp; Progress</div>
+
+            <div class="stats-row">
+                <div class="stat-block">
+                    <div class="stat-val" id="dupr-rating">—</div>
+                    <div class="stat-lbl">Current DUPR</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-val" id="dupr-peak">—</div>
+                    <div class="stat-lbl">Peak Rating</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-val" id="match-count">0</div>
+                    <div class="stat-lbl">Rated Matches</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-val" id="win-pct">—</div>
+                    <div class="stat-lbl">Win Rate</div>
+                </div>
             </div>
-            <div class="stat-block">
-                <div class="stat-val" id="dupr-peak">—</div>
-                <div class="stat-lbl">Peak Rating</div>
+
+            <div id="dupr-graph-empty" class="graph-empty">
+                <span>&#128202;</span>
+                No rating data yet — play some rated matches to start tracking.
             </div>
-            <div class="stat-block">
-                <div class="stat-val" id="match-count">0</div>
-                <div class="stat-lbl">Rated Matches</div>
-            </div>
-            <div class="stat-block">
-                <div class="stat-val" id="win-pct">—</div>
-                <div class="stat-lbl">Win Rate</div>
+            <div class="graph-wrap" id="dupr-graph-wrap" style="display:none">
+                <canvas id="dupr-chart"></canvas>
             </div>
         </div>
-
-        <div id="dupr-graph-empty" class="graph-empty">
-            <span>📊</span>
-            No rating data yet — play some rated matches to start tracking.
-        </div>
-        <div class="graph-wrap" id="dupr-graph-wrap" style="display:none">
-            <canvas id="dupr-chart"></canvas>
-        </div>
-    </div>
     </section>
 
-    <!-- ── Recent Matches ── -->
-    <section id="matches">
-    <div class="pb-panel">
-        <div class="pb-label" style="float:left">Recent Matches</div>
-        <button class="add-match-btn" onclick="openModal()">+ Log Match</button>
-        <div style="clear:both; margin-bottom:.8rem"></div>
+    <!-- ── Section 2: Tournaments ── -->
+    <section id="tournaments" class="subpage-section subpage-section--alt scroll-fade">
+        <h2 class="section-heading">Tournaments</h2>
 
-        <div id="matches-container">
-            <div class="matches-empty">No matches logged yet — results will appear here after your first tournament.</div>
+        <div class="pb-panel">
+            <div class="pb-label" style="float:left">Tournament History</div>
+            <div style="clear:both; margin-bottom:.8rem"></div>
+            <div class="matches-empty">No tournaments logged yet — results will appear here after your first event.</div>
         </div>
-    </div>
+    </section>
+
+    <!-- ── Section 3: Match History ── -->
+    <section id="match-history" class="subpage-section scroll-fade">
+        <h2 class="section-heading">Match History</h2>
+
+        <div class="pb-panel">
+            <div class="pb-label" style="float:left">Recent Matches</div>
+            <button class="add-match-btn" onclick="openModal()">+ Log Match</button>
+            <div style="clear:both; margin-bottom:.8rem"></div>
+
+            <div id="matches-container">
+                <div class="matches-empty">No matches logged yet — results will appear here after your first tournament.</div>
+            </div>
+        </div>
     </section>
 
 </div>

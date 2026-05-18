@@ -10,18 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* ── Page container ── */
-        .germany-page {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: calc(var(--nav-height) + 2.5rem) 2rem 5rem;
-        }
-        #screen-test, #screen-results {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: calc(var(--nav-height) + 2rem) 2rem 5rem;
-        }
-
         /* ── Shared panel ── */
         .g-panel {
             background: var(--card-bg);
@@ -30,10 +18,69 @@
             padding: 1.5rem 1.7rem;
             margin-bottom: 1.3rem;
         }
+        .g-panel:last-child { margin-bottom: 0; }
         .g-label {
             font-size: .72rem; text-transform: uppercase;
             letter-spacing: .08em; color: var(--text-secondary);
             margin-bottom: 1rem;
+        }
+
+        /* ── Countdown ── */
+        .countdown-number {
+            font-size: 3rem;
+            font-weight: 600;
+            letter-spacing: -.05em;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: .4rem;
+        }
+        .countdown-sub {
+            font-size: .8rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── CBYX timeline ── */
+        .cbyx-body {
+            font-size: .92rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1.4rem;
+        }
+        .cbyx-timeline {
+            position: relative;
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--card-border);
+            margin-top: .5rem;
+        }
+        .cbyx-step {
+            position: relative;
+            padding: .65rem 0 .65rem .8rem;
+        }
+        .cbyx-step::before {
+            content: '';
+            position: absolute;
+            left: -1.9rem;
+            top: .9rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--card-border);
+            border: 2px solid var(--bg-color);
+            box-shadow: 0 0 0 2px var(--card-border);
+        }
+        .cbyx-step--last::before {
+            background: #4ade80;
+            box-shadow: 0 0 0 2px rgba(74,222,128,.3);
+        }
+        .cbyx-step-label {
+            font-size: .88rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: .15rem;
+        }
+        .cbyx-step-desc {
+            font-size: .8rem;
+            color: var(--text-secondary);
         }
 
         /* ── API key panel ── */
@@ -90,6 +137,13 @@
             display: inline-block; padding: .2rem .65rem;
             border-radius: 20px; font-size: .72rem; font-weight: 600;
             letter-spacing: .04em;
+        }
+
+        /* ── Test screens ── */
+        #screen-test, #screen-results {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: calc(var(--nav-height) + 2rem) 2rem 5rem;
         }
 
         /* ── Test: header ── */
@@ -155,15 +209,15 @@
         }
 
         /* ── Next btn ── */
-        .next-btn {
+        .ger-next-btn {
             display: block; width: 100%; padding: .88rem;
             border-radius: 10px; border: none;
             background: var(--text-primary); color: var(--bg-color);
             font-family: var(--font-family); font-size: .95rem;
             font-weight: 600; cursor: pointer; transition: background .2s;
         }
-        .next-btn:hover:not(:disabled) { background: #d0d0d0; }
-        .next-btn:disabled { background: #1e1c19; color: #3a3830; cursor: default; border: 1px solid var(--card-border); }
+        .ger-next-btn:hover:not(:disabled) { background: #d0d0d0; }
+        .ger-next-btn:disabled { background: #1e1c19; color: #3a3830; cursor: default; border: 1px solid var(--card-border); }
 
         /* ── Loading ── */
         .loading-card {
@@ -272,13 +326,16 @@
         <a href="../index.html" class="nav-brand">Kaden Schmidt</a>
         <div class="nav-links">
             <a href="../index.html" class="nav-link">Home</a>
+            <a href="#about-trip" class="nav-link">About the Trip</a>
+            <a href="#language-test" class="nav-link">Language Test</a>
+            <a href="#my-progress" class="nav-link">My Progress</a>
             <div class="nav-dropdown">
                 <button class="nav-link dropdown-toggle">Pages &#9662;</button>
                 <div class="dropdown-menu">
-                    <a href="chess.html"      class="dropdown-item">♟ Chess</a>
-                    <a href="fitness.html"    class="dropdown-item">🏃 Fitness</a>
-                    <a href="pickleball.html" class="dropdown-item">🏓 Pickleball</a>
-                    <a href="germany.html"    class="dropdown-item">🇩🇪 Germany</a>
+                    <a href="chess.html"      class="dropdown-item">&#9820; Chess</a>
+                    <a href="fitness.html"    class="dropdown-item">&#127939; Fitness</a>
+                    <a href="pickleball.html" class="dropdown-item">&#127955; Pickleball</a>
+                    <a href="germany.html"    class="dropdown-item">&#127465;&#127466; Germany</a>
                 </div>
             </div>
         </div>
@@ -287,48 +344,100 @@
 </nav>
 
 <!-- ══════════════════ LANDING ══════════════════ -->
-<div id="screen-landing" class="germany-page fade-in">
+<div id="screen-landing" class="page-wrapper fade-in">
 
     <h1 class="title">Germany</h1>
-    <p class="intro">Heading to Germany for a year starting July 2026. Tracking my German progress here with an adaptive language test that generates new questions every time — no memorizing the answers.</p>
+    <p class="intro">I'm heading to Germany in July 2026. Track my German language progress with an adaptive AI-powered test that generates new questions every time.</p>
+    <div class="page-header-divider"></div>
 
-    <!-- API Key -->
-    <div class="g-panel" id="key-panel">
-        <div class="g-label">Gemini API Key</div>
-        <div id="key-saved-ui" style="display:none">
-            <div class="key-ok">
-                ✓ API key saved
-                <button class="key-change" onclick="showKeyInput()">change</button>
-            </div>
+    <!-- ── Section 1: About the Trip ── -->
+    <section id="about-trip" class="subpage-section">
+        <h2 class="section-heading">About the Trip</h2>
+
+        <!-- Countdown -->
+        <div class="g-panel">
+            <div class="g-label">Departure Countdown</div>
+            <div class="countdown-number" id="countdown-days">—</div>
+            <div class="countdown-sub">days until departure &nbsp;·&nbsp; July 14, 2026</div>
         </div>
-        <div id="key-input-ui">
-            <div class="key-row">
-                <input type="password" class="key-input" id="key-input"
-                       placeholder="Paste Gemini API key…"
-                       onkeydown="if(event.key==='Enter')saveKey()">
-                <button class="g-btn-primary" onclick="saveKey()">Save</button>
-            </div>
-            <div id="key-test-msg" style="font-size:.75rem;margin-top:.5rem;min-height:1.2em;"></div>
-            <p class="key-note">
-                Stored in your browser only — never sent anywhere except Google's API.
-                Free key at <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>.
+
+        <!-- CBYX info + timeline -->
+        <div class="g-panel">
+            <div class="g-label">Congress-Bundestag Youth Exchange (CBYX)</div>
+            <p class="cbyx-body">
+                The Congress-Bundestag Youth Exchange (CBYX) is a fully-funded scholarship sponsored by the U.S. Congress and the German Bundestag. It sends American students to Germany for a year of cultural immersion, intensive language learning, academic study, and professional internship experience — all while living with a German host family.
             </p>
+            <div class="cbyx-timeline">
+                <div class="cbyx-step">
+                    <div class="cbyx-step-label">July 2026 — Depart</div>
+                    <div class="cbyx-step-desc">Fly to Germany and begin cultural orientation.</div>
+                </div>
+                <div class="cbyx-step">
+                    <div class="cbyx-step-label">Aug – Sep 2026 — Language Training</div>
+                    <div class="cbyx-step-desc">2 months of full-time intensive German language immersion at a language school.</div>
+                </div>
+                <div class="cbyx-step">
+                    <div class="cbyx-step-label">Oct 2026 – Jan 2027 — School Semester</div>
+                    <div class="cbyx-step-desc">One semester attending a German Schule or Berufsschule alongside local students.</div>
+                </div>
+                <div class="cbyx-step">
+                    <div class="cbyx-step-label">Feb – Jun 2027 — Internship</div>
+                    <div class="cbyx-step-desc">Professional internship at a German company or organization, putting language skills to work.</div>
+                </div>
+                <div class="cbyx-step cbyx-step--last">
+                    <div class="cbyx-step-label">June 2027 — Return Home</div>
+                    <div class="cbyx-step-desc">Complete the exchange and return to the United States.</div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Progress graph -->
-    <div class="g-panel">
-        <div class="g-label">German Level Over Time</div>
-        <div id="graph-empty" class="graph-empty">Complete your first test to start tracking progress.</div>
-        <div class="graph-wrap" id="graph-wrap" style="display:none">
-            <canvas id="progress-chart"></canvas>
+    <!-- ── Section 2: Language Test ── -->
+    <section id="language-test" class="subpage-section subpage-section--alt">
+        <h2 class="section-heading">Language Test</h2>
+
+        <!-- API Key -->
+        <div class="g-panel" id="key-panel">
+            <div class="g-label">Gemini API Key</div>
+            <div id="key-saved-ui" style="display:none">
+                <div class="key-ok">
+                    &#10003; API key saved
+                    <button class="key-change" onclick="showKeyInput()">change</button>
+                </div>
+            </div>
+            <div id="key-input-ui">
+                <div class="key-row">
+                    <input type="password" class="key-input" id="key-input"
+                           placeholder="Paste Gemini API key…"
+                           onkeydown="if(event.key==='Enter')saveKey()">
+                    <button class="g-btn-primary" onclick="saveKey()">Save</button>
+                </div>
+                <div id="key-test-msg" style="font-size:.75rem;margin-top:.5rem;min-height:1.2em;"></div>
+                <p class="key-note">
+                    Stored in your browser only — never sent anywhere except Google's API.
+                    Free key at <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>.
+                </p>
+            </div>
         </div>
-    </div>
 
-    <button class="start-btn" id="start-btn" onclick="startTest()" disabled>
-        🇩🇪 &nbsp;Take German Language Test
-    </button>
-    <p class="start-note">20 adaptive questions · new questions every test · ~15–20 min</p>
+        <button class="start-btn" id="start-btn" onclick="startTest()" disabled>
+            &#127465;&#127466; &nbsp;Take German Language Test
+        </button>
+        <p class="start-note">20 adaptive questions · new questions every test · ~15–20 min</p>
+    </section>
+
+    <!-- ── Section 3: My Progress ── -->
+    <section id="my-progress" class="subpage-section">
+        <h2 class="section-heading">My Progress</h2>
+
+        <div class="g-panel">
+            <div class="g-label">German Level Over Time</div>
+            <div id="graph-empty" class="graph-empty">Complete your first test to start tracking progress.</div>
+            <div class="graph-wrap" id="graph-wrap" style="display:none">
+                <canvas id="progress-chart"></canvas>
+            </div>
+        </div>
+    </section>
 
 </div>
 
@@ -348,8 +457,8 @@
 
     <div id="q-area"></div>
 
-    <button class="next-btn" id="next-btn" onclick="handleNext()" disabled>
-        Next Question →
+    <button class="ger-next-btn" id="next-btn" onclick="handleNext()" disabled>
+        Next Question &#8594;
     </button>
 
 </div>
@@ -374,7 +483,7 @@
     </div>
 
     <button class="save-btn" id="save-btn" onclick="saveResult()">Save Result to Progress</button>
-    <button class="back-btn" onclick="goHome()">← Back to Home</button>
+    <button class="back-btn" onclick="goHome()">&#8592; Back to Home</button>
 
 </div>
 
@@ -475,7 +584,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('start-btn').disabled = false;
     }
     renderGraph();
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
 });
+
+// ── Countdown ─────────────────────────────────────────────────────────────────
+function updateCountdown() {
+    const departure = new Date('2026-07-14');
+    const now = new Date();
+    const diff = departure - now;
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    const el = document.getElementById('countdown-days');
+    if (el) el.textContent = days > 0 ? days : '0';
+}
 
 // ── Key management ────────────────────────────────────────────────────────────
 async function saveKey() {
@@ -560,6 +681,7 @@ function renderGraph() {
 function startTest() {
     theta=3.0; qNum=0; answers=[]; covered=[]; selIdx=null; curQ=null;
     prefetchedQ=null; prefetchPromise=null;
+    window.scrollTo(0,0);
     show('test');
     loadNext();
 }
@@ -656,13 +778,10 @@ Rules:
 }
 
 // ── Display ───────────────────────────────────────────────────────────────────
-// Start pre-fetching the next question in the background.
-// Uses current theta (before the user answers) — level may be ±1 off but
-// eliminates the 15-20s wait between questions.
 function startPrefetch() {
-    if (qNum >= TOTAL - 1) return;          // no next question after the last
-    if (prefetchPromise) return;            // already fetching
-    const li = levelIdx();                  // best guess at next level
+    if (qNum >= TOTAL - 1) return;
+    if (prefetchPromise) return;
+    const li = levelIdx();
     prefetchPromise = generateQ(li)
         .then(q  => { prefetchedQ = q; prefetchPromise = null; })
         .catch(() => { prefetchedQ = null; prefetchPromise = null; });
@@ -686,16 +805,14 @@ async function loadNext() {
 
     try {
         if (prefetchedQ) {
-            // Pre-fetch ready — instant display
             curQ = prefetchedQ;
             prefetchedQ = null;
             prefetchPromise = null;
         } else {
-            // Nothing pre-fetched yet — wait for it (first question, or prefetch failed)
             document.getElementById('q-area').innerHTML =
                 `<div class="loading-card"><div class="spin"></div><div class="loading-msg">Generating ${lvl} question…</div></div>`;
             if (prefetchPromise) {
-                await prefetchPromise;  // wait for in-progress fetch
+                await prefetchPromise;
                 prefetchPromise = null;
                 if (prefetchedQ) { curQ = prefetchedQ; prefetchedQ = null; }
                 else curQ = await generateQ(li);
@@ -705,7 +822,7 @@ async function loadNext() {
         }
         covered.push(curQ.topic);
         displayQ(curQ);
-        startPrefetch(); // kick off next question immediately
+        startPrefetch();
     } catch(e) {
         const errMsg = e.message || 'Unknown error';
         document.getElementById('q-area').innerHTML =
@@ -807,6 +924,7 @@ function saveResult() {
 
 function goHome() {
     show('landing');
+    window.scrollTo(0,0);
     renderGraph();
 }
 </script>

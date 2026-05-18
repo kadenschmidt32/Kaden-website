@@ -3,19 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Play Chess with Kaden</title>
+    <title>Chess — Kaden Schmidt</title>
     <link rel="stylesheet" href="../style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        /* ── Page ──────────────────────────────────────────────────── */
-        .chess-page {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: calc(var(--nav-height) + 1.5rem) 2rem 3rem;
-        }
         /* ── Rating strip ──────────────────────────────────────────── */
         .rating-strip {
             display:flex; align-items:center; gap:1.2rem;
@@ -226,6 +220,71 @@
         .move-san{color:var(--text-secondary);}
         .move-san.latest{color:var(--text-primary);font-weight:600;}
 
+        /* ── Stats panels ──────────────────────────────────────────── */
+        .rapid-card {
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:12px; padding:1.2rem 1.5rem;
+            display:flex; gap:2.5rem; flex-wrap:wrap;
+            margin-bottom:1.4rem; align-items:center;
+        }
+        .rapid-card .rc-block {}
+        .rapid-card .rc-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); margin-bottom:.3rem; }
+        .rapid-card .rc-value { font-size:2rem; font-weight:600; color:var(--text-primary); letter-spacing:-.03em; line-height:1; }
+        .rapid-card .rc-sub   { font-size:.75rem; color:var(--text-secondary); margin-top:.25rem; }
+        .stats-panel {
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:12px; padding:1.4rem 1.5rem; margin-bottom:1.2rem;
+        }
+        .stats-panel:last-child { margin-bottom: 0; }
+        .stats-panel h3 {
+            font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
+            color:var(--text-secondary); margin-bottom:1rem;
+        }
+        .chart-wrap { position:relative; height:240px; }
+        .openings-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; }
+        .op-list h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); margin-bottom:.9rem; }
+        .op-row {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:.45rem 0; border-bottom:1px solid rgba(255,255,255,.04);
+            font-size:.82rem; gap:.8rem;
+        }
+        .op-row:last-child { border-bottom:none; }
+        .op-name { color:var(--text-primary); font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .op-games { color:var(--text-secondary); font-size:.72rem; flex-shrink:0; }
+        .op-pct { font-weight:600; flex-shrink:0; min-width:38px; text-align:right; }
+        .op-pct.good { color:#4ade80; }
+        .op-pct.bad  { color:#ef4444; }
+        .stats-loading { display:flex; align-items:center; justify-content:center; padding:2.5rem; color:var(--text-secondary); font-size:.85rem; gap:.6rem; }
+        .spin { width:14px; height:14px; border:2px solid var(--card-border); border-top-color:#888; border-radius:50%; animation:spin .7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* ── Global Standing panel ── */
+        .global-standing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .gs-block { display:flex; flex-direction:column; gap:.3rem; }
+        .gs-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); }
+        .gs-value { font-size:2rem; font-weight:600; color:var(--text-primary); letter-spacing:-.03em; line-height:1.1; margin-top:.2rem; }
+        .gs-sub   { font-size:.72rem; color:var(--text-secondary); margin-top:.25rem; }
+        .pct-bar-wrap {
+            margin-top:.6rem; background:rgba(255,255,255,.06);
+            border-radius:100px; height:6px; overflow:hidden; max-width:200px;
+        }
+        .pct-bar-fill {
+            height:100%; border-radius:100px;
+            background:linear-gradient(90deg,#4ade80,#22d3ee);
+            width:0; transition:width 1.2s cubic-bezier(.16,1,.3,1);
+        }
+        .gs-disclaimer {
+            font-size:.65rem; color:#444; margin-top:1rem; margin-bottom:0;
+        }
+        @media(max-width:600px){
+            .global-standing-grid { grid-template-columns:1fr; gap:1.4rem; }
+        }
+
         /* ── Responsive ────────────────────────────────────────────── */
         @media(max-width:740px){
             .chess-layout{grid-template-columns:1fr;}
@@ -244,15 +303,17 @@
         <a href="../index.html" class="nav-brand">Kaden Schmidt</a>
         <div class="nav-links">
             <a href="../index.html" class="nav-link">Home</a>
-            <a href="#play" class="nav-link">Play</a>
-            <a href="#stats" class="nav-link">Stats</a>
+            <a href="#play-bot" class="nav-link">Play Bot</a>
+            <a href="#my-stats" class="nav-link">My Stats</a>
+            <a href="#rating-history" class="nav-link">Rating History</a>
+            <a href="#openings" class="nav-link">Openings</a>
             <div class="nav-dropdown">
                 <button class="nav-link dropdown-toggle">Pages &#9662;</button>
                 <div class="dropdown-menu">
-                    <a href="chess.html"      class="dropdown-item">♟ Chess</a>
-                    <a href="fitness.html"    class="dropdown-item">🏃 Fitness</a>
-                    <a href="pickleball.html" class="dropdown-item">🏓 Pickleball</a>
-                    <a href="germany.html"    class="dropdown-item">🇩🇪 Germany</a>
+                    <a href="chess.html"      class="dropdown-item">&#9820; Chess</a>
+                    <a href="fitness.html"    class="dropdown-item">&#127939; Fitness</a>
+                    <a href="pickleball.html" class="dropdown-item">&#127955; Pickleball</a>
+                    <a href="germany.html"    class="dropdown-item">&#127465;&#127466; Germany</a>
                 </div>
             </div>
         </div>
@@ -260,80 +321,128 @@
     <a href="mailto:kadenschmidt32@gmail.com" class="button contact-button">Contact Me</a>
 </nav>
 
-<section id="play" class="chess-page fade-in">
+<div class="page-wrapper fade-in">
+
     <h1 class="title">Chess</h1>
-    <p class="intro">Trained by two grandmasters at a young age, I've been playing chess for most of my life. The bot below matches my live Chess.com rating — see if you have what it takes to beat it.</p>
+    <p class="intro">Follow my chess journey, play against my bot, and track my live rating and opening stats pulled directly from Chess.com.</p>
+    <div class="page-header-divider"></div>
 
-    <!-- Rating strip -->
-    <div class="rating-strip">
-        <div class="rating-dot"></div>
-        <div>
-            <div class="r-label">Kaden's Rapid Rating</div>
-            <div class="r-value" id="rating-display">—</div>
+    <!-- ── Section 1: Play the Bot ── -->
+    <section id="play-bot" class="subpage-section scroll-fade">
+        <h2 class="section-heading">Play the Bot</h2>
+
+        <!-- Rating strip -->
+        <div class="rating-strip">
+            <div class="rating-dot"></div>
+            <div>
+                <div class="r-label">Kaden's Rapid Rating</div>
+                <div class="r-value" id="rating-display">—</div>
+            </div>
+            <div class="r-div"></div>
+            <div class="r-note" id="rating-note">
+                Fetching from Chess.com<span class="dots"><span>.</span><span>.</span><span>.</span></span>
+            </div>
         </div>
-        <div class="r-div"></div>
-        <div class="r-note" id="rating-note">
-            Fetching from Chess.com<span class="dots"><span>.</span><span>.</span><span>.</span></span>
-        </div>
-    </div>
 
-    <div class="chess-layout">
+        <div class="chess-layout">
 
-        <!-- Board -->
-        <div class="board-wrap">
+            <!-- Board -->
+            <div class="board-wrap">
 
-            <!-- Bot row (top) -->
-            <div class="player-row">
-                <div class="avatar">
-                    <img src="../images/IMG_0338chess.PNG" alt="Kaden"
-                         onerror="this.style.display='none';this.parentNode.textContent='K'">
+                <!-- Bot row (top) -->
+                <div class="player-row">
+                    <div class="avatar">
+                        <img src="../images/IMG_0338chess.PNG" alt="Kaden"
+                             onerror="this.style.display='none';this.parentNode.textContent='K'">
+                    </div>
+                    <div class="p-name" id="bot-name">Kaden's Bot</div>
+                    <span class="p-tag" id="bot-tag">—</span>
+                    <div class="clock" id="clock-bot">10:00</div>
                 </div>
-                <div class="p-name" id="bot-name">Kaden's Bot</div>
-                <span class="p-tag" id="bot-tag">—</span>
-                <div class="clock" id="clock-bot">10:00</div>
-            </div>
 
-            <div id="board-wrap-inner">
-                <div class="board-grid" id="chess-board"></div>
-            </div>
-
-            <!-- Player row (bottom) -->
-            <div class="player-row">
-                <div class="avatar">You</div>
-                <div class="p-name">You</div>
-                <span class="p-tag">Challenger</span>
-                <div class="clock active" id="clock-you">10:00</div>
-            </div>
-
-            <div class="status-bar" id="status-bar">
-                Choose your color and click Start Game.
-            </div>
-        </div>
-
-        <!-- Side panel -->
-        <div class="side-panel">
-
-            <div class="panel-card">
-                <h3>New Game</h3>
-                <div class="color-pick">
-                    <button class="color-btn active" id="btn-white" onclick="selectColor('white')">♔ White</button>
-                    <button class="color-btn"        id="btn-black" onclick="selectColor('black')">♚ Black</button>
+                <div id="board-wrap-inner">
+                    <div class="board-grid" id="chess-board"></div>
                 </div>
-                <button class="ctrl-btn primary" onclick="startGame()">▶ Start Game</button>
-                <button class="ctrl-btn"          onclick="undoMove()">↩ Undo Move</button>
-                <button class="ctrl-btn danger"   onclick="resignGame()">⚑ Resign</button>
-            </div>
 
-            <div class="panel-card">
-                <h3>Move History</h3>
-                <div class="move-list" id="move-list">
-                    <span style="color:#444;font-size:.76rem;font-family:var(--font-family)">No moves yet</span>
+                <!-- Player row (bottom) -->
+                <div class="player-row">
+                    <div class="avatar">You</div>
+                    <div class="p-name">You</div>
+                    <span class="p-tag">Challenger</span>
+                    <div class="clock active" id="clock-you">10:00</div>
+                </div>
+
+                <div class="status-bar" id="status-bar">
+                    Choose your color and click Start Game.
                 </div>
             </div>
 
+            <!-- Side panel -->
+            <div class="side-panel">
+
+                <div class="panel-card">
+                    <h3>New Game</h3>
+                    <div class="color-pick">
+                        <button class="color-btn active" id="btn-white" onclick="selectColor('white')">♔ White</button>
+                        <button class="color-btn"        id="btn-black" onclick="selectColor('black')">♚ Black</button>
+                    </div>
+                    <button class="ctrl-btn primary" onclick="startGame()">&#9654; Start Game</button>
+                    <button class="ctrl-btn"          onclick="undoMove()">&#8617; Undo Move</button>
+                    <button class="ctrl-btn danger"   onclick="resignGame()">&#9873; Resign</button>
+                </div>
+
+                <div class="panel-card">
+                    <h3>Move History</h3>
+                    <div class="move-list" id="move-list">
+                        <span style="color:#444;font-size:.76rem;font-family:var(--font-family)">No moves yet</span>
+                    </div>
+                </div>
+
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+
+    <!-- ── Section 2: My Stats ── -->
+    <section id="my-stats" class="subpage-section subpage-section--alt scroll-fade">
+        <h2 class="section-heading">My Stats</h2>
+
+        <div id="sc-rapid-card">
+            <div class="stats-loading"><div class="spin"></div> Loading...</div>
+        </div>
+
+        <div class="stats-panel">
+            <h3>Global Standing (Rapid)</h3>
+            <div id="sc-global">
+                <div class="stats-loading"><div class="spin"></div></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Section 3: Rating History ── -->
+    <section id="rating-history" class="subpage-section scroll-fade">
+        <h2 class="section-heading">Rating History</h2>
+
+        <div class="stats-panel">
+            <h3>Rapid · Past 12 Months</h3>
+            <div id="sc-chart-wrap" class="chart-wrap">
+                <div class="stats-loading"><div class="spin"></div> Fetching games...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Section 4: Opening Performance ── -->
+    <section id="openings" class="subpage-section subpage-section--alt scroll-fade">
+        <h2 class="section-heading">Opening Performance</h2>
+
+        <div class="stats-panel">
+            <h3>Rapid · Min. 3 games per opening</h3>
+            <div id="sc-openings">
+                <div class="stats-loading"><div class="spin"></div></div>
+            </div>
+        </div>
+    </section>
+
+</div>
 
 <!-- Promotion overlay (hidden by default) -->
 <div class="promo-overlay" id="promo-overlay" style="display:none;">
@@ -726,7 +835,7 @@ function updateStatus(){
         gameActive=false; stopClock();
         showGameover('draw', pick(MSG.draw));
     } else if(game.in_check()){
-        setStatus('check','⚠ Check!');
+        setStatus('check','&#9888; Check!');
     } else {
         setStatus('',`${game.turn()==='w'?'White':'Black'} to move`);
     }
@@ -785,134 +894,8 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 });
 </script>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     CHESS STATS SECTION — completely separate from the bot above
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- Chess stats scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<style>
-.stats-divider { width:100%; height:1px; background:var(--card-border); margin-top:2.5rem; }
-.chess-stats-page {
-    max-width:900px; margin:0 auto;
-    padding:2.5rem 2rem 4rem;
-}
-.chess-stats-page h2 {
-    font-size:1.6rem; font-weight:600; letter-spacing:-.03em;
-    background:linear-gradient(180deg,#fff 0%,#a0a0a0 100%);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    margin-bottom:1.8rem;
-}
-.chess-stats-page h3 {
-    font-size:.72rem; text-transform:uppercase; letter-spacing:.08em;
-    color:var(--text-secondary); margin-bottom:1rem;
-}
-.rapid-card {
-    background:var(--card-bg); border:1px solid var(--card-border);
-    border-radius:12px; padding:1.2rem 1.5rem;
-    display:flex; gap:2.5rem; flex-wrap:wrap;
-    margin-bottom:1.4rem; align-items:center;
-}
-.rapid-card .rc-block {}
-.rapid-card .rc-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); margin-bottom:.3rem; }
-.rapid-card .rc-value { font-size:2rem; font-weight:600; color:var(--text-primary); letter-spacing:-.03em; line-height:1; }
-.rapid-card .rc-sub   { font-size:.75rem; color:var(--text-secondary); margin-top:.25rem; }
-.stats-panel {
-    background:var(--card-bg); border:1px solid var(--card-border);
-    border-radius:12px; padding:1.4rem 1.5rem; margin-bottom:1.2rem;
-}
-.chart-wrap { position:relative; height:240px; }
-.openings-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; }
-.op-list h4 { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); margin-bottom:.9rem; }
-.op-row {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:.45rem 0; border-bottom:1px solid rgba(255,255,255,.04);
-    font-size:.82rem; gap:.8rem;
-}
-.op-row:last-child { border-bottom:none; }
-.op-name { color:var(--text-primary); font-weight:500; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.op-games { color:var(--text-secondary); font-size:.72rem; flex-shrink:0; }
-.op-pct { font-weight:600; flex-shrink:0; min-width:38px; text-align:right; }
-.op-pct.good { color:#4ade80; }
-.op-pct.bad  { color:#ef4444; }
-.stats-loading { display:flex; align-items:center; justify-content:center; padding:2.5rem; color:var(--text-secondary); font-size:.85rem; gap:.6rem; }
-.spin { width:14px; height:14px; border:2px solid var(--card-border); border-top-color:#888; border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-
-/* ── Global Standing panel ── */
-.global-standing-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: start;
-}
-.gs-block { display:flex; flex-direction:column; gap:.3rem; }
-.gs-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-secondary); }
-.gs-value { font-size:2rem; font-weight:600; color:var(--text-primary); letter-spacing:-.03em; line-height:1.1; margin-top:.2rem; }
-.gs-sub   { font-size:.72rem; color:var(--text-secondary); margin-top:.25rem; }
-.pct-bar-wrap {
-    margin-top:.6rem; background:rgba(255,255,255,.06);
-    border-radius:100px; height:6px; overflow:hidden; max-width:200px;
-}
-.pct-bar-fill {
-    height:100%; border-radius:100px;
-    background:linear-gradient(90deg,#4ade80,#22d3ee);
-    width:0; transition:width 1.2s cubic-bezier(.16,1,.3,1);
-}
-.gs-disclaimer {
-    font-size:.65rem; color:#444; margin-top:1rem; margin-bottom:0;
-}
-@media(max-width:600px){
-    .global-standing-grid { grid-template-columns:1fr; gap:1.4rem; }
-}
-</style>
-
-<div class="stats-divider"></div>
-<section id="stats" class="chess-stats-page">
-    <h2>My Rapid Chess Stats</h2>
-
-    <div id="sc-rapid-card">
-        <div class="stats-loading"><div class="spin"></div> Loading...</div>
-    </div>
-
-    <div class="stats-panel">
-        <h3>Global Standing (Rapid)</h3>
-        <div id="sc-global">
-            <div class="stats-loading"><div class="spin"></div></div>
-        </div>
-    </div>
-
-    <div class="stats-panel">
-        <h3>Rapid Rating — Past 12 Months</h3>
-        <div id="sc-chart-wrap" class="chart-wrap">
-            <div class="stats-loading"><div class="spin"></div> Fetching games...</div>
-        </div>
-    </div>
-
-    <div class="stats-panel">
-        <h3>Opening Performance (Rapid, min. 3 games)</h3>
-        <div id="sc-openings">
-            <div class="stats-loading"><div class="spin"></div></div>
-        </div>
-    </div>
-</section>
-
-<footer class="site-footer">
-    <div class="footer-inner">
-        <div class="footer-social">
-            <a href="https://github.com/kadenschmidt32" target="_blank" rel="noopener" class="footer-icon-btn" aria-label="GitHub">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-            </a>
-            <a href="https://www.linkedin.com/in/kaden-schmidt-347771303/" target="_blank" rel="noopener" class="footer-icon-btn" aria-label="LinkedIn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-            </a>
-            <a href="mailto:kadenschmidt32@gmail.com" class="footer-icon-btn" aria-label="Email">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            </a>
-        </div>
-        <a href="../resume.pdf" download="Kaden_Schmidt_Resume.pdf" class="footer-resume-btn">Download Resume</a>
-        <p class="footer-copy">&copy; 2026 Kaden Schmidt. All rights reserved.</p>
-    </div>
-</footer>
 
 <script>
 (async function chessStats() {
@@ -1192,5 +1175,24 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 })();
 </script>
 
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-social">
+            <a href="https://github.com/kadenschmidt32" target="_blank" rel="noopener" class="footer-icon-btn" aria-label="GitHub">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+            </a>
+            <a href="https://www.linkedin.com/in/kaden-schmidt-347771303/" target="_blank" rel="noopener" class="footer-icon-btn" aria-label="LinkedIn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="mailto:kadenschmidt32@gmail.com" class="footer-icon-btn" aria-label="Email">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </a>
+        </div>
+        <a href="../resume.pdf" download="Kaden_Schmidt_Resume.pdf" class="footer-resume-btn">Download Resume</a>
+        <p class="footer-copy">&copy; 2026 Kaden Schmidt. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="../script.js"></script>
 </body>
 </html>
