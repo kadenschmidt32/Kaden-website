@@ -16,15 +16,6 @@
             margin: 0 auto;
             padding: calc(var(--nav-height) + 1.5rem) 2rem 3rem;
         }
-        .chess-header { margin-bottom: 1.5rem; }
-        .chess-header h1 {
-            font-size: 2rem; font-weight: 600; letter-spacing: -0.04em;
-            background: linear-gradient(180deg,#fff 0%,#a0a0a0 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            margin-bottom: .3rem;
-        }
-        .chess-header p { font-size:.9rem; color:var(--text-secondary); margin:0; }
-
         /* ── Rating strip ──────────────────────────────────────────── */
         .rating-strip {
             display:flex; align-items:center; gap:1.2rem;
@@ -253,8 +244,10 @@
         <a href="../index.html" class="nav-brand">Kaden Schmidt</a>
         <div class="nav-links">
             <a href="../index.html" class="nav-link">Home</a>
+            <a href="#play" class="nav-link">Play</a>
+            <a href="#stats" class="nav-link">Stats</a>
             <div class="nav-dropdown">
-                <button class="nav-link dropdown-toggle">Explore &#9662;</button>
+                <button class="nav-link dropdown-toggle">Pages &#9662;</button>
                 <div class="dropdown-menu">
                     <a href="chess.html"      class="dropdown-item">♟ Chess</a>
                     <a href="fitness.html"    class="dropdown-item">🏃 Fitness</a>
@@ -267,11 +260,9 @@
     <a href="mailto:kadenschmidt32@gmail.com" class="button contact-button">Contact Me</a>
 </nav>
 
-<div class="chess-page fade-in">
-    <div class="chess-header">
-        <h1>Play Chess with Kaden</h1>
-        <p>Trained by two grandmasters at a young age, I have been playing chess for most of my life. This bot matches my live rating — do you have what it takes to beat it? Good luck!</p>
-    </div>
+<section id="play" class="chess-page fade-in">
+    <h1 class="title">Chess</h1>
+    <p class="intro">Trained by two grandmasters at a young age, I've been playing chess for most of my life. The bot below matches my live Chess.com rating — see if you have what it takes to beat it.</p>
 
     <!-- Rating strip -->
     <div class="rating-strip">
@@ -342,7 +333,7 @@
 
         </div>
     </div>
-</div>
+</section>
 
 <!-- Promotion overlay (hidden by default) -->
 <div class="promo-overlay" id="promo-overlay" style="display:none;">
@@ -876,7 +867,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </style>
 
 <div class="stats-divider"></div>
-<div class="chess-stats-page">
+<section id="stats" class="chess-stats-page">
     <h2>My Rapid Chess Stats</h2>
 
     <div id="sc-rapid-card">
@@ -903,7 +894,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             <div class="stats-loading"><div class="spin"></div></div>
         </div>
     </div>
-</div>
+</section>
 
 <footer class="site-footer">
     <div class="footer-inner">

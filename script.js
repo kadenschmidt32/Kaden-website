@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateActiveLink() {
         const scrollY = window.scrollY;
-        let currentId = null;
+        let currentId = sections.length ? sections[0].id : null;
         sections.forEach(section => {
             const top = section.offsetTop - NAV_HEIGHT - 40;
             if (scrollY >= top) currentId = section.id;
